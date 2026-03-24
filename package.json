@@ -1,0 +1,29 @@
+{
+  "name": "curio",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "res:build": "rescript",
+    "res:clean": "rescript clean",
+    "res:dev": "rescript watch",
+    "dev:server": "node server.mjs",
+    "dev:client": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@atproto/api": "^0.13.26",
+    "@atproto/oauth-client-browser": "^0.3.20",
+    "@rescript/webapi": "experimental",
+    "rescript": "12.2.0",
+    "sury": "^11.0.0-alpha.4",
+    "sury-ppx": "^11.0.0-alpha.2",
+    "xote": "^4.16.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "tailwindcss": "^4.1.12",
+    "vite": "^7.1.0"
+  }
+}

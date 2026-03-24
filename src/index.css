@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-curio-50: oklch(97% 0.02 270);
+  --color-curio-100: oklch(93% 0.04 270);
+  --color-curio-200: oklch(87% 0.07 270);
+  --color-curio-300: oklch(79% 0.10 270);
+  --color-curio-400: oklch(68% 0.15 270);
+  --color-curio-500: oklch(58% 0.20 270);
+  --color-curio-600: oklch(50% 0.20 270);
+  --color-curio-700: oklch(42% 0.18 270);
+  --color-curio-800: oklch(35% 0.14 270);
+  --color-curio-900: oklch(28% 0.10 270);
+  --color-curio-950: oklch(20% 0.06 270);
+  --color-gold-400: oklch(82% 0.16 85);
+  --color-gold-500: oklch(75% 0.15 85);
+  --color-heart: oklch(65% 0.25 15);
+  --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}

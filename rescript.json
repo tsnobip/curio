@@ -1,0 +1,32 @@
+{
+  "name": "curio",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    }
+  ],
+  "package-specs": [
+    {
+      "module": "esmodule",
+      "in-source": true
+    }
+  ],
+  "suffix": ".res.mjs",
+  "jsx": {
+    "version": 4,
+    "module": "Xote__JSX"
+  },
+  "dependencies": [
+    "@rescript/webapi",
+    "rescript-signals",
+    "sury",
+    "xote"
+  ],
+  "ppx-flags": [
+    "sury-ppx/bin"
+  ],
+  "compiler-flags": [
+    "-open WebAPI.Global"
+  ]
+}
