@@ -1,5 +1,3 @@
-@val external apiKey: string = "import.meta.env.VITE_TMDB_API_KEY"
-
 let baseUrl = "https://api.themoviedb.org/3"
 
 let imageUrl = posterPath => "https://image.tmdb.org/t/p/w500" ++ posterPath
@@ -60,35 +58,31 @@ type mediaDetail =
   | Movie(movieDetail)
   | Tv(tvDetail)
 
-external dictAsHeaders: dict<string> => WebAPI.FetchAPI.headersInit = "%identity"
-@send external responseJson: (WebAPI.FetchAPI.response, unit) => promise<JSON.t> = "json"
-
-let fetchJson = async url => {
-  let headers =
-    Dict.fromArray([
-      ("Authorization", "Bearer " ++ apiKey),
-      ("Content-Type", "application/json"),
-    ])->dictAsHeaders
-  let resp = await fetch(url, ~init={headers: headers})
-  await responseJson(resp, ())
+let fetchJson = async (apiKey, url) => {
+  let headers = Dict.fromArray([
+    ("Authorization", "Bearer " ++ apiKey),
+    ("Content-Type", "application/json"),
+  ])
+  let resp = await fetch(url, ~init={headers: FromDict(headers)})
+  await resp->Response.json
 }
 
-let searchMulti = async query => {
+let searchMulti = async (apiKey, query) => {
   let url = baseUrl ++ "/search/multi?query=" ++ encodeURIComponent(query) ++ "&include_adult=false"
-  let json = await fetchJson(url)
+  let json = await fetchJson(apiKey, url)
   let response = json->S.parseOrThrow(searchResponseSchema)
   response.results->Array.filter(r => r.mediaType == "movie" || r.mediaType == "tv")
 }
 
-let fetchMovie = async id => {
+let fetchMovie = async (apiKey, id) => {
   let url = baseUrl ++ "/movie/" ++ Int.toString(id)
-  let json = await fetchJson(url)
+  let json = await fetchJson(apiKey, url)
   Movie(json->S.parseOrThrow(movieDetailSchema))
 }
 
-let fetchTv = async id => {
+let fetchTv = async (apiKey, id) => {
   let url = baseUrl ++ "/tv/" ++ Int.toString(id)
-  let json = await fetchJson(url)
+  let json = await fetchJson(apiKey, url)
   Tv(json->S.parseOrThrow(tvDetailSchema))
 }
 
@@ -104,8 +98,8 @@ let displayTitle = (result: searchResult) =>
 
 let displayYear = (result: searchResult) => {
   let date = switch result.releaseDate {
-  | Some(d) if d != "" => Some(d)
-  | _ => result.firstAirDate
+  | Some("") | None => result.firstAirDate
+  | Some(d) => Some(d)
   }
   switch date {
   | Some(d) if d->String.length >= 4 => d->String.slice(~start=0, ~end=4)

@@ -17,3 +17,14 @@
   --color-heart: oklch(65% 0.25 15);
   --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
+
+/* Star rating hover: container is flex-row-reverse so DOM order is 5→1
+   but visual order is 1→5. Hovering a star highlights it and all
+   subsequent siblings (which are visually the stars before it). */
+.star-rating:hover .star-btn {
+  color: var(--color-gray-600);
+}
+.star-rating .star-form:hover .star-btn,
+.star-rating .star-form:hover ~ .star-form .star-btn {
+  color: var(--color-gold-400);
+}

@@ -15,18 +15,19 @@
   "suffix": ".res.mjs",
   "jsx": {
     "version": 4,
-    "module": "Xote__JSX"
+    "module": "Hjsx"
   },
   "dependencies": [
-    "@rescript/webapi",
-    "rescript-signals",
-    "sury",
-    "xote"
+    "rescript-bun",
+    "rescript-x",
+    "sury"
   ],
   "ppx-flags": [
     "sury-ppx/bin"
   ],
   "compiler-flags": [
-    "-open WebAPI.Global"
+    "-open ResX",
+    "-open RescriptBun",
+    "-open RescriptBun.Globals"
   ]
 }

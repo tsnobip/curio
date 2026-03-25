@@ -29,3 +29,7 @@ dist-ssr
 .merlin
 
 *.res.mjs
+
+__generated__
+
+oauth.db

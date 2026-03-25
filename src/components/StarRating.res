@@ -1,38 +1,59 @@
-open Xote
-
 @jsx.component
-let make = (~tmdbId, ~mediaType, ~title, ~posterPath) => {
-  let hovered = Signal.make(0)
+let make = (
+  ~tmdbId: int,
+  ~mediaType: string,
+  ~title: string,
+  ~posterPath: string,
+  ~currentRating: int,
+  ~rateEndpoint: Handlers.hxPost,
+) => {
+  // Stars rendered in reverse DOM order (5→1), displayed with flex-direction: row-reverse
+  // so they appear visually as 1→5. This lets CSS ~ selector highlight "previous" stars on hover.
+  let stars = Array.fromInitializer(~length=5, i => {
+    let star = 5 - i
+    let filled = star <= currentRating
 
-  let stars = Computed.make(() => {
-    let currentRating = switch Ratings.getRating(tmdbId, mediaType) {
-    | Some(r) => r.rating
-    | None => 0
-    }
-    let hoveredStar = Signal.get(hovered)
-
-    Array.fromInitializer(~length=5, i => {
-      let star = i + 1
-      let filled = hoveredStar > 0 ? star <= hoveredStar : star <= currentRating
-
-      <button
-        class={"text-2xl transition-colors " ++ (
-          filled ? "text-gold-400" : "text-gray-600 hover:text-gold-500"
-        )}
-        onClick={_evt => {
-          if star == currentRating {
-            Ratings.remove(~tmdbId, ~mediaType)->ignore
-          } else {
-            Ratings.rate(~tmdbId, ~mediaType, ~rating=star, ~title, ~posterPath)->ignore
-          }
+    <form className="star-form">
+      <input type_="hidden" name="tmdbId" value={Int.toString(tmdbId)} />
+      <input type_="hidden" name="mediaType" value={mediaType} />
+      <input type_="hidden" name="title" value={title} />
+      <input type_="hidden" name="posterPath" value={posterPath} />
+      <input
+        type_="hidden"
+        name="rating"
+        value={if star == currentRating {
+          "0"
+        } else {
+          Int.toString(star)
         }}
-        onMouseEnter={_evt => Signal.set(hovered, star)}
-        onMouseLeave={_evt => Signal.set(hovered, 0)}
+      />
+      <button
+        type_="submit"
+        hxPost={rateEndpoint}
+        hxTarget={Htmx.Target.make(Closest({cssSelector: ".star-rating"}))}
+        hxSwap={Htmx.Swap.make(OuterHTML)}
+        className={"star-btn text-2xl transition-colors cursor-pointer " ++
+        if filled {
+          "text-gold-400"
+        } else {
+          "text-gray-600"
+        }}
       >
-        {Component.text(filled ? "\u2605" : "\u2606")}
+        {Hjsx.string(
+          if filled {
+            "\u2605"
+          } else {
+            "\u2606"
+          },
+        )}
       </button>
-    })
+    </form>
   })
 
-  <div class="flex gap-0.5"> {Component.signalFragment(stars)} </div>
+  <div
+    className="star-rating flex flex-row-reverse justify-end gap-0.5"
+    id={"rating-" ++ Int.toString(tmdbId) ++ "-" ++ mediaType}
+  >
+    {stars->Hjsx.array}
+  </div>
 }

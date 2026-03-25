@@ -1,45 +1,30 @@
-open Xote
-
 @jsx.component
-let make = () => {
-  let content = Computed.make(() => {
-    let isLoading = Signal.get(Search.loading)
-    let searchResults = Signal.get(Search.results)
-    let query = Signal.get(Search.query)
-
-    if isLoading {
-      [
-        <div class="flex justify-center py-12">
-          <div class="text-gray-500"> {Component.text("Searching...")} </div>
-        </div>,
-      ]
-    } else if Array.length(searchResults) > 0 {
-      [
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Component.list(Search.results, result => <MovieCard result />)}
-        </div>,
-      ]
-    } else if query->String.trim != "" {
-      [
-        <div class="flex justify-center py-12">
-          <div class="text-gray-500"> {Component.text("No results found")} </div>
-        </div>,
-      ]
-    } else {
-      [
-        <div class="flex justify-center py-12">
-          <div class="text-gray-500">
-            {Component.text("Search for movies and TV shows to get started")}
-          </div>
-        </div>,
-      ]
-    }
-  })
-
-  <div class="max-w-6xl mx-auto px-4 py-8">
-    <div class="mb-8">
-      <SearchBar />
+let make = (~searchEndpoint: Handlers.hxGet) => {
+  <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="mb-8">
+      <div className="w-full max-w-2xl mx-auto">
+        <input
+          type_="search"
+          name="q"
+          placeholder="Search movies & TV shows..."
+          className="w-full px-4 py-3 text-lg rounded-xl bg-gray-900 border border-gray-700 text-gray-100 placeholder-gray-500 focus:outline-none focus:border-curio-500 focus:ring-1 focus:ring-curio-500 transition-colors"
+          hxGet={searchEndpoint}
+          hxTrigger="input changed delay:500ms, search"
+          hxTarget={Htmx.Target.make(CssSelector("#search-results"))}
+          hxSwap={Htmx.Swap.make(InnerHTML)}
+          hxIndicator={Htmx.Indicator.make(Selector("#search-indicator"))}
+        />
+      </div>
     </div>
-    {Component.signalFragment(content)}
+    <div id="search-indicator" className="htmx-indicator flex justify-center py-4">
+      <div className="text-gray-500"> {Hjsx.string("Searching...")} </div>
+    </div>
+    <div id="search-results">
+      <div className="flex justify-center py-12">
+        <div className="text-gray-500">
+          {Hjsx.string("Search for movies and TV shows to get started")}
+        </div>
+      </div>
+    </div>
   </div>
 }
