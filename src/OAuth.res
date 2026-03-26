@@ -24,6 +24,7 @@ type clientOptions = {
   clientMetadata: clientMetadata,
   stateStore: store,
   sessionStore: store,
+  requestLock?: unit => promise<unit>,
 }
 
 @module("@atproto/oauth-client-node") @new
@@ -56,19 +57,19 @@ external agentFromSession: oauthSession => AtProto.agent = "Agent"
 
 let db = BunSqlite.Database.make("data/oauth.db")
 
-let _ =
-  db
-  ->BunSqlite.Database.query(
-    "CREATE TABLE IF NOT EXISTS oauth_state (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
-  )
-  ->BunSqlite.Statement.run({"_": 0})
+db
+->BunSqlite.Database.query(
+  "CREATE TABLE IF NOT EXISTS oauth_state (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+)
+->BunSqlite.Statement.run({"_": 0})
+->ignore
 
-let _ =
-  db
-  ->BunSqlite.Database.query(
-    "CREATE TABLE IF NOT EXISTS oauth_session (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
-  )
-  ->BunSqlite.Statement.run({"_": 0})
+db
+->BunSqlite.Database.query(
+  "CREATE TABLE IF NOT EXISTS oauth_session (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+)
+->BunSqlite.Statement.run({"_": 0})
+->ignore
 
 let safeStringify = (val: 'a): string => {
   switch JSON.stringifyAny(val) {

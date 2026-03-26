@@ -1,5 +1,5 @@
 @jsx.component
-let make = (~searchEndpoint: Handlers.hxGet) => {
+let make = (~searchEndpoint: Handlers.hxGet, ~recentReviews: array<ReviewStore.review>) => {
   <div className="max-w-6xl mx-auto px-4 py-8">
     <div className="mb-8">
       <div className="w-full max-w-2xl mx-auto">
@@ -20,11 +20,24 @@ let make = (~searchEndpoint: Handlers.hxGet) => {
       <div className="text-gray-500"> {Hjsx.string("Searching...")} </div>
     </div>
     <div id="search-results">
-      <div className="flex justify-center py-12">
-        <div className="text-gray-500">
-          {Hjsx.string("Search for movies and TV shows to get started")}
+      {if Array.length(recentReviews) > 0 {
+        <div>
+          <h2 className="text-lg font-semibold text-gray-100 mb-4">
+            {Hjsx.string("Recent Reviews")}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentReviews
+            ->Array.map(review => <ReviewFeedCard review />)
+            ->Hjsx.array}
+          </div>
         </div>
-      </div>
+      } else {
+        <div className="flex justify-center py-12">
+          <div className="text-gray-500">
+            {Hjsx.string("Search for movies and TV shows to get started")}
+          </div>
+        </div>
+      }}
     </div>
   </div>
 }

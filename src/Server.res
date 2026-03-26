@@ -68,7 +68,7 @@ let handler = Handlers.make(~requestToContext=async request => {
   let session = switch session {
   | Some({did}) =>
     try {
-      let _ = await OAuth.restoreAgent(did)
+      let _agent = await OAuth.restoreAgent(did)
       session
     } catch {
     | JsExn(e) =>
@@ -141,6 +141,25 @@ handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handle
           {AtProto.RatingCollection.tmdbId, mediaType, title, posterPath, rating, review},
         )
       }
+
+      // Cache in ReviewStore
+      if rating > 0 {
+        ReviewStore.put({
+          mediaKey: ReviewStore.mediaKey(~mediaType, ~tmdbId),
+          did: session.did,
+          rating,
+          review,
+          title,
+          posterPath,
+          mediaType,
+          tmdbId,
+          handle: session.handle,
+          avatar: session.avatar,
+          createdAt: Spacetime.now(),
+        })
+      } else {
+        ReviewStore.delete(~mediaKey=ReviewStore.mediaKey(~mediaType, ~tmdbId), ~did=session.did)
+      }
     } catch {
     | JsExn(e) => Console.error2("Error rating", e)
     }
@@ -156,8 +175,12 @@ handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handle
       let favResp = await AtProto.Favorite.list(agent, session.did)
       let watchResp = await AtProto.Watchlist.list(agent, session.did)
       (
-        favResp.data.records->Array.some(f => f.value.tmdbId == tmdbId && f.value.mediaType == mediaType),
-        watchResp.data.records->Array.some(w => w.value.tmdbId == tmdbId && w.value.mediaType == mediaType),
+        favResp.data.records->Array.some(f =>
+          f.value.tmdbId == tmdbId && f.value.mediaType == mediaType
+        ),
+        watchResp.data.records->Array.some(w =>
+          w.value.tmdbId == tmdbId && w.value.mediaType == mediaType
+        ),
       )
     } catch {
     | _ => (false, false)
@@ -378,7 +401,9 @@ let _server = Bun.serve({
               <Navbar session={context.session} logoutAction />
               <main>
                 {switch path {
-                | list{} => <SearchPage searchEndpoint />
+                | list{} =>
+                  let recentReviews = ReviewStore.getRecent(~limit=20)
+                  <SearchPage searchEndpoint recentReviews />
                 | list{"login"} =>
                   let error = url->URL.searchParams->URLSearchParams.get("error")
                   <LoginPage loginWithHandleAction error />
@@ -406,6 +431,8 @@ let _server = Bun.serve({
                   <RatingsPage session={context.session} handle={userHandle->Handle.fromString} />
                 | list{userHandle, "wishlist"} if userHandle->String.startsWith("@") =>
                   <WatchlistPage session={context.session} handle={userHandle->Handle.fromString} />
+                | list{userHandle} if userHandle->String.startsWith("@") =>
+                  <UserPage session={context.session} handle={userHandle->Handle.fromString} />
                 | _ =>
                   <div className="flex justify-center py-20">
                     <h1 className="text-2xl text-gray-500"> {Hjsx.string("Page not found")} </h1>

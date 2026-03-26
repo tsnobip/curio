@@ -27,14 +27,18 @@ let make = (
       <input
         type_="hidden"
         name="rating"
-        value={if star == currentRating { "0" } else { Int.toString(star) }}
+        value={if star == currentRating {
+          "0"
+        } else {
+          Int.toString(star)
+        }}
       />
       <button
         type_="submit"
         hxPost={rateEndpoint}
         hxTarget={Htmx.Target.make(Closest({cssSelector: ".user-actions"}))}
         hxSwap={Htmx.Swap.make(OuterHTML)}
-        __rawProps={dict{"data-star": Int.toString(star)->JSON.Encode.string}}
+        __rawProps={dict{"data-star": Int.toString(star)->JSON.String}}
         className={`relative text-lg transition-colors cursor-pointer
         group-hover/stars:text-gray-600 [.star-form:hover_&]:text-gold-400
          [.star-form:hover~.star-form_&]:text-gold-400 after:content-[attr(data-star)]

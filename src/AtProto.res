@@ -181,11 +181,6 @@ let addType = (json, typ) => {
   json
 }
 
-module IsoDate = {
-  type t = Date.t
-  let schema = S.string->S.datetime
-}
-
 module RatingCollection = {
   @unboxed @schema
   type kind = | @as("social.curio.rating") Rating
@@ -200,7 +195,7 @@ module RatingCollection = {
     review: @s.nullable option<string>,
     title: string,
     posterPath: string,
-    createdAt?: @s.defaultWith(() => Date.make()) IsoDate.t,
+    createdAt?: @s.defaultWith(() => Spacetime.now()) Spacetime.t,
     \"$type"?: @s.default(Rating) kind,
   }
 
@@ -220,7 +215,7 @@ module WatchlistCollection = {
     mediaType: string,
     title: string,
     posterPath: string,
-    addedAt?: @s.defaultWith(() => Date.make()) IsoDate.t,
+    addedAt?: @s.defaultWith(() => Spacetime.now()) Spacetime.t,
     \"$type"?: @s.default(Watchlist) kind,
   }
 
@@ -240,7 +235,7 @@ module FavoriteCollection = {
     mediaType: string,
     title: string,
     posterPath: string,
-    addedAt?: @s.defaultWith(() => Date.make()) IsoDate.t,
+    addedAt?: @s.defaultWith(() => Spacetime.now()) Spacetime.t,
     \"$type"?: @s.default(Favorite) kind,
   }
 

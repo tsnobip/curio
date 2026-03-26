@@ -31,14 +31,11 @@ module MediaInfo = {
         <div className="flex items-center gap-3 text-sm text-gray-400 mb-4">
           <span> {Hjsx.string(year)} </span>
           <span> {Hjsx.string(meta)} </span>
-          <span className="text-gold-400">
-            {Hjsx.string(`★ ${Float.toFixed(voteAverage, ~digits=1)}`)}
-          </span>
+          <Rating rating={Average(voteAverage)} />
         </div>
         <div className="text-sm text-gray-500 mb-4"> {Hjsx.string(genres)} </div>
         {switch tagline {
-        | Some(t) if t != "" =>
-          <p className="text-curio-400 italic mb-4"> {Hjsx.string(t)} </p>
+        | Some(t) if t != "" => <p className="text-curio-400 italic mb-4"> {Hjsx.string(t)} </p>
         | _ => Hjsx.null
         }}
         <p className="text-gray-300 leading-relaxed"> {Hjsx.string(overview)} </p>
@@ -100,7 +97,9 @@ let make = async (
       let agent = await OAuth.restoreAgent(s.did)
       let resp = await AtProto.Rating.list(agent, s.did)
       let found =
-        resp.data.records->Array.find(r => r.value.tmdbId == idNum && r.value.mediaType == mediaType)
+        resp.data.records->Array.find(r =>
+          r.value.tmdbId == idNum && r.value.mediaType == mediaType
+        )
       (
         found->Option.map(r => r.value.rating)->Option.getOr(0),
         found->Option.flatMap(r => r.value.review),
@@ -141,8 +140,10 @@ let make = async (
   | None => false
   }
 
-  // TODO: fetch community reviews (requires feed/aggregation service)
-  let communityReviews = []
+  let communityReviews = ReviewStore.getForMedia(
+    ~mediaKey=ReviewStore.mediaKey(~mediaType, ~tmdbId=idNum),
+    ~excludeDid=?session->Option.map(s => s.did),
+  )
 
   let (title, posterPath) = switch detail {
   | Some(Movie(m)) => (m.title, m.posterPath->Option.getOr(""))
@@ -152,13 +153,13 @@ let make = async (
 
   switch detail {
   | None =>
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8">
       <div className="flex justify-center py-20">
         <div className="text-gray-500"> {Hjsx.string("Not found")} </div>
       </div>
     </div>
   | Some(Movie(m)) =>
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 space-y-8">
       <MediaInfo
         poster={m.posterPath}
         title={m.title}
@@ -240,13 +241,7 @@ let make = async (
             favoriteEndpoint
           />
           <ReviewSection.MyReview
-            tmdbId={t.id}
-            mediaType="tv"
-            title
-            posterPath
-            currentRating
-            currentReview
-            rateEndpoint
+            tmdbId={t.id} mediaType="tv" title posterPath currentRating currentReview rateEndpoint
           />
         </div>
       | None => Hjsx.null

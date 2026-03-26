@@ -27,13 +27,11 @@ module MyReview = {
       <div
         className="group/review"
         id={reviewId}
-        __rawProps={dict{"data-editing": "false"->JSON.Encode.string}}
+        __rawProps={dict{"data-editing": "false"->JSON.String}}
       >
-        <h2 className="text-lg font-semibold text-gray-100 mb-3">
-          {Hjsx.string("My Review")}
-        </h2>
+        <h2 className="text-lg font-semibold text-gray-100 mb-3"> {Hjsx.string("My Review")} </h2>
         // Display mode
-        <div className="group-data-[editing=true]/review:hidden">
+        <div className="group-data-[editing=true]/review:hidden whitespace-pre-wrap">
           {switch currentReview {
           | Some(r) if r != "" =>
             <div>
@@ -98,48 +96,8 @@ module MyReview = {
   }
 }
 
-module ReviewCard = {
-  @jsx.component
-  let make = (~rating: AtProto.RatingCollection.t, ~handle: Handle.t, ~avatar: option<string>) => {
-    <div className="flex gap-3">
-      // Avatar
-      {switch avatar {
-      | Some(url) =>
-        <img
-          src={url}
-          alt={handle->Handle.toString}
-          className="h-8 w-8 rounded-full object-cover shrink-0 mt-0.5"
-        />
-      | None =>
-        let letter =
-          handle->Handle.toString->String.get(0)->Option.map(String.make)->Option.getOr("?")->String.toUpperCase
-        <div
-          className="h-8 w-8 rounded-full bg-curio-700 flex items-center justify-center font-medium text-curio-200 text-sm shrink-0 mt-0.5"
-        >
-          {Hjsx.string(letter)}
-        </div>
-      }}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-200">
-            {Hjsx.string(handle->Handle.toString)}
-          </span>
-          <span className="text-xs text-gold-400">
-            {Hjsx.string(`★ ${Int.toString(rating.rating)}/10`)}
-          </span>
-        </div>
-        {switch rating.review {
-        | Some(r) if r != "" =>
-          <p className="mt-1 text-sm text-gray-400 leading-relaxed"> {Hjsx.string(r)} </p>
-        | _ => Hjsx.null
-        }}
-      </div>
-    </div>
-  }
-}
-
 @jsx.component
-let make = (~reviews: array<(Handle.t, option<string>, AtProto.RatingCollection.t)>) => {
+let make = (~reviews: array<ReviewStore.review>) => {
   if Array.length(reviews) == 0 {
     Hjsx.null
   } else {
@@ -147,11 +105,9 @@ let make = (~reviews: array<(Handle.t, option<string>, AtProto.RatingCollection.
       <h2 className="text-lg font-semibold text-gray-100 mb-3">
         {Hjsx.string("Reviews from Curio")}
       </h2>
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {reviews
-        ->Array.map(((handle, avatar, rating)) => {
-          <ReviewCard handle avatar rating />
-        })
+        ->Array.map(review => <ReviewFeedCard review showMedia=false />)
         ->Hjsx.array}
       </div>
     </div>

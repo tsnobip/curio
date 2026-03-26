@@ -35,8 +35,6 @@ let make = async (~handle, ~session: option<Session.t>) => {
             </div>
           }
 
-          let ratingText = `${Int.toString(item.rating)}/10`
-
           <a href={route} className="group cursor-pointer block">
             <div
               className="aspect-2/3 rounded-lg overflow-hidden mb-2 ring-1 ring-gray-800 group-hover:ring-curio-500 transition-all"
@@ -48,9 +46,7 @@ let make = async (~handle, ~session: option<Session.t>) => {
             >
               {Hjsx.string(item.title)}
             </h3>
-            <span className="text-xs text-gold-400">
-              {Hjsx.string(`★ ${ratingText}`)}
-            </span>
+            <Rating rating={Individual(item.rating)} />
           </a>
         })
         ->Hjsx.array}

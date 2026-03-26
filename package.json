@@ -17,6 +17,7 @@
     "rescript": "12.2.0",
     "rescript-bun": "^2.1.0",
     "rescript-x": "^1.3.0",
+    "spacetime": "^7.12.0",
     "sury": "^11.0.0-alpha.4",
     "sury-ppx": "^11.0.0-alpha.2"
   },
