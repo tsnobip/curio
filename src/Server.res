@@ -108,8 +108,10 @@ let searchEndpoint = handler.hxGet("search", ~securityPolicy=SecurityPolicy.allo
   }
 })
 
-// Use ref/define pattern for self-referencing handlers
+// Declare all refs upfront so handlers can reference each other
 let rateEndpoint = handler.hxPostRef("rate")
+let wishlistEndpoint = handler.hxPostRef("wishlist")
+let favoriteEndpoint = handler.hxPostRef("favorite")
 handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handler=async ({
   request,
   context,
@@ -126,7 +128,7 @@ handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handle
   | other => other
   }
 
-  switch context.session {
+  let (currentRating, currentReview) = switch context.session {
   | Some(session) =>
     try {
       let agent = await OAuth.restoreAgent(session.did)
@@ -142,15 +144,47 @@ handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handle
     } catch {
     | JsExn(e) => Console.error2("Error rating", e)
     }
-    <StarRating
-      tmdbId mediaType title posterPath currentRating=rating currentReview=review rateEndpoint
-    />
-  | None =>
-    <StarRating tmdbId mediaType title posterPath currentRating=0 currentReview=None rateEndpoint />
+    (rating, review)
+  | None => (0, None)
   }
+
+  // Also load current favorite/watchlist state to render the full actions block
+  let (isFavorite, inWatchlist) = switch context.session {
+  | Some(session) =>
+    try {
+      let agent = await OAuth.restoreAgent(session.did)
+      let favResp = await AtProto.Favorite.list(agent, session.did)
+      let watchResp = await AtProto.Watchlist.list(agent, session.did)
+      (
+        favResp.data.records->Array.some(f => f.value.tmdbId == tmdbId && f.value.mediaType == mediaType),
+        watchResp.data.records->Array.some(w => w.value.tmdbId == tmdbId && w.value.mediaType == mediaType),
+      )
+    } catch {
+    | _ => (false, false)
+    }
+  | None => (false, false)
+  }
+
+  <div className="user-actions space-y-8">
+    <DetailPage.Actions
+      tmdbId
+      mediaType
+      title
+      posterPath
+      currentRating
+      currentReview
+      isFavorite
+      inWatchlist
+      rateEndpoint
+      wishlistEndpoint
+      favoriteEndpoint
+    />
+    <ReviewSection.MyReview
+      tmdbId mediaType title posterPath currentRating currentReview rateEndpoint
+    />
+  </div>
 })
 
-let wishlistEndpoint = handler.hxPostRef("wishlist")
 handler.hxPostDefine(wishlistEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handler=async ({
   request,
   context,
@@ -188,7 +222,6 @@ handler.hxPostDefine(wishlistEndpoint, ~securityPolicy=SecurityPolicy.allow, ~ha
   <WatchlistButton tmdbId mediaType title posterPath inWatchlist wishlistEndpoint />
 })
 
-let favoriteEndpoint = handler.hxPostRef("favorite")
 handler.hxPostDefine(favoriteEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handler=async ({
   request,
   context,
