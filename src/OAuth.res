@@ -99,6 +99,7 @@ let initOAuthClient = (publicUrl: string) => {
     },
     stateStore: StoreImpl.stateStore,
     sessionStore: StoreImpl.sessionStore,
+    requestLock: ?StoreImpl.requestLock,
   })
   client := Some(c)
 }

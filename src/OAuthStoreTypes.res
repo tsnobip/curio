@@ -7,4 +7,5 @@ type store = {
 module type Impl = {
   let stateStore: store
   let sessionStore: store
+  let requestLock: option<unit => promise<unit>>
 }
