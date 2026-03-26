@@ -6,10 +6,7 @@
 // GSI1 (RecentIndex): gsi1pk = "RECENT", gsi1sk = createdAt
 // GSI2 (UserIndex): gsi2pk = did, gsi2sk = createdAt
 
-let tableName = switch Bun.env->Bun.Env.get("REVIEW_TABLE") {
-| Some(t) => t
-| None => "curio-reviews"
-}
+let tableName = Env.reviewTable
 
 let client = DynamoDB.make()
 

@@ -1,9 +1,6 @@
-let port = 4444
+let port = Env.port
 
-let tmdbApiKey = switch Bun.env->Bun.Env.get("TMDB_API_KEY") {
-| Some(key) => key
-| None => panic("TMDB_API_KEY environment variable is required")
-}
+let tmdbApiKey = Env.tmdbApiKey
 
 type appContext = {
   session: option<Session.t>,
@@ -326,15 +323,7 @@ let logoutAction = handler.formAction(
 
 // --- Main Server ---
 
-let publicUrl = switch Bun.env->Bun.Env.get("PUBLIC_URL") {
-| Some(url) => url
-| None =>
-  if BunUtils.isDev {
-    "http://127.0.0.1:5173"
-  } else {
-    `http://127.0.0.1:${Int.toString(port)}`
-  }
-}
+let publicUrl = Env.publicUrl
 OAuth.initOAuthClient(publicUrl)
 Console.log("OAuth client initialized")
 
@@ -347,6 +336,24 @@ let _server = Bun.serve({
 
     // Handle OAuth callback outside res-x handler (it returns a redirect, not HTML)
     switch pathname {
+    | "/client-metadata.json" =>
+      let redirectUri = `${publicUrl}/oauth/callback`
+      let body = JSON.stringifyAny({
+        "client_id": `${publicUrl}/client-metadata.json`,
+        "client_name": "Curio",
+        "client_uri": publicUrl,
+        "redirect_uris": [redirectUri],
+        "grant_types": ["authorization_code", "refresh_token"],
+        "scope": "atproto transition:generic",
+        "response_types": ["code"],
+        "application_type": "web",
+        "token_endpoint_auth_method": "none",
+        "dpop_bound_access_tokens": true,
+      })->Option.getOr("{}")
+      let headers = Headers.make()
+      headers->Headers.set("Content-Type", "application/json")
+      Response.makeWithHeaders(body, ~options={status: 200, headers})
+
     | "/oauth/callback" =>
       // Handle OAuth callback
       try {

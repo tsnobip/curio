@@ -4,10 +4,7 @@
 // PK: key
 // SK: store_type ("state" or "session")
 
-let tableName = switch Bun.env->Bun.Env.get("OAUTH_TABLE") {
-| Some(t) => t
-| None => "curio-oauth"
-}
+let tableName = Env.oauthTable
 
 let client = DynamoDB.make()
 

@@ -25,7 +25,7 @@ external createDocumentClient: (dynamoDBClient, translateConfig) => documentClie
   "DynamoDBDocumentClient"
 
 let make = (~config: clientConfig={}) => {
-  let config = switch Bun.env->Bun.Env.get("DYNAMODB_ENDPOINT") {
+  let config = switch Env.dynamoEndpoint {
   | Some(endpoint) => {
       endpoint,
       region: config.region->Option.getOr("us-east-1"),

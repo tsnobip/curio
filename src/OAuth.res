@@ -51,7 +51,7 @@ external agentFromSession: oauthSession => AtProto.agent = "Agent"
 
 // --- Store (SQLite in dev, DynamoDB in production) ---
 
-let storeImpl = if Bun.env.node_env === Some("production") {
+let storeImpl = if Env.isProduction {
   module(OAuthStoreDynamo: OAuthStoreTypes.Impl)
 } else {
   module(OAuthStoreSqlite: OAuthStoreTypes.Impl)
@@ -80,11 +80,16 @@ external getProfileFull: (AtProto.agent, getProfileInput) => promise<profileResp
 let initOAuthClient = (publicUrl: string) => {
   let redirectUri = `${publicUrl}/oauth/callback`
   let scope = "atproto transition:generic"
-  let clientId =
+  let isLocalhost =
+    publicUrl->String.includes("localhost") || publicUrl->String.includes("127.0.0.1")
+  let clientId = if isLocalhost {
     "http://localhost?redirect_uri=" ++
     encodeURIComponent(redirectUri) ++
     "&scope=" ++
     encodeURIComponent(scope)
+  } else {
+    `${publicUrl}/client-metadata.json`
+  }
 
   let c = makeClient({
     clientMetadata: {
@@ -93,7 +98,7 @@ let initOAuthClient = (publicUrl: string) => {
       scope,
       grantTypes: ["authorization_code", "refresh_token"],
       responseTypes: ["code"],
-      applicationType: "native",
+      applicationType: if isLocalhost { "native" } else { "web" },
       tokenEndpointAuthMethod: "none",
       dpopBoundAccessTokens: true,
     },
