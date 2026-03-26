@@ -398,12 +398,31 @@ let _server = Bun.serve({
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             </head>
             <body className="min-h-screen bg-gray-950 text-gray-100">
-              <Navbar session={context.session} logoutAction />
+              <Navbar session={context.session} logoutAction searchEndpoint />
               <main>
                 {switch path {
                 | list{} =>
                   let recentReviews = ReviewStore.getRecent(~limit=20)
-                  <SearchPage searchEndpoint recentReviews />
+                  <div className="max-w-6xl mx-auto px-4 py-8">
+                    {if Array.length(recentReviews) > 0 {
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-100 mb-4">
+                          {Hjsx.string("Recent Reviews")}
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {recentReviews
+                          ->Array.map(review => <ReviewFeedCard review />)
+                          ->Hjsx.array}
+                        </div>
+                      </div>
+                    } else {
+                      <div className="flex justify-center py-12">
+                        <div className="text-gray-500">
+                          {Hjsx.string("No reviews yet. Search for movies and TV shows to get started!")}
+                        </div>
+                      </div>
+                    }}
+                  </div>
                 | list{"login"} =>
                   let error = url->URL.searchParams->URLSearchParams.get("error")
                   <LoginPage loginWithHandleAction error />
