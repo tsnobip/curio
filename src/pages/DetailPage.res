@@ -202,7 +202,13 @@ let make = async (
             rateEndpoint
           />
         </div>
-      | None => Hjsx.null
+      | None =>
+        <a
+          href="/login"
+          className="inline-block px-4 py-2 text-sm rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
+        >
+          {Hjsx.string("Sign in to rate and review")}
+        </a>
       }}
       <ReviewSection reviews=communityReviews />
     </div>
@@ -244,7 +250,13 @@ let make = async (
             tmdbId={t.id} mediaType="tv" title posterPath currentRating currentReview rateEndpoint
           />
         </div>
-      | None => Hjsx.null
+      | None =>
+        <a
+          href="/login"
+          className="inline-block px-4 py-2 text-sm rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"
+        >
+          {Hjsx.string("Sign in to rate and review")}
+        </a>
       }}
       <ReviewSection reviews=communityReviews />
     </div>
