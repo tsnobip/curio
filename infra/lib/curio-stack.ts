@@ -5,7 +5,12 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
+import * as route53 from "aws-cdk-lib/aws-route53";
+import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import { Construct } from "constructs";
+
+const DOMAIN_NAME = "curio.social";
 
 export class CurioStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -59,6 +64,18 @@ export class CurioStack extends cdk.Stack {
       "curio/tmdb-api-key"
     );
 
+    // --- DNS & Certificate ---
+
+    const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
+      domainName: DOMAIN_NAME,
+    });
+
+    // Certificate must be in us-east-1 for CloudFront
+    const certificate = new acm.Certificate(this, "Certificate", {
+      domainName: DOMAIN_NAME,
+      validation: acm.CertificateValidation.fromDns(hostedZone),
+    });
+
     // --- Lambda Function ---
 
     const imageTag = process.env.IMAGE_TAG ?? "latest";
@@ -75,6 +92,7 @@ export class CurioStack extends cdk.Stack {
         REVIEW_TABLE: reviewsTable.tableName,
         OAUTH_TABLE: oauthTable.tableName,
         TMDB_API_KEY: tmdbSecret.secretValue.unsafeUnwrap(),
+        PUBLIC_URL: `https://${DOMAIN_NAME}`,
         AWS_LWA_INVOKE_MODE: "response_stream",
       },
     });
@@ -93,6 +111,8 @@ export class CurioStack extends cdk.Stack {
     // --- CloudFront Distribution ---
 
     const distribution = new cloudfront.Distribution(this, "CurioCdn", {
+      domainNames: [DOMAIN_NAME],
+      certificate,
       defaultBehavior: {
         origin: new origins.FunctionUrlOrigin(fnUrl),
         viewerProtocolPolicy:
@@ -112,24 +132,23 @@ export class CurioStack extends cdk.Stack {
       },
     });
 
-    // Update Lambda with the CloudFront PUBLIC_URL
-    fn.addEnvironment(
-      "PUBLIC_URL",
-      `https://${distribution.distributionDomainName}`
-    );
+    // --- DNS Record ---
+
+    new route53.ARecord(this, "DnsRecord", {
+      zone: hostedZone,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.CloudFrontTarget(distribution)
+      ),
+    });
 
     // --- Outputs ---
 
-    new cdk.CfnOutput(this, "CloudFrontUrl", {
-      value: `https://${distribution.distributionDomainName}`,
+    new cdk.CfnOutput(this, "SiteUrl", {
+      value: `https://${DOMAIN_NAME}`,
     });
 
     new cdk.CfnOutput(this, "EcrRepoUri", {
       value: repo.repositoryUri,
-    });
-
-    new cdk.CfnOutput(this, "FunctionUrl", {
-      value: fnUrl.url,
     });
   }
 }
