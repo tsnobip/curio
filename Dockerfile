@@ -8,13 +8,8 @@ RUN bun install --trust && chmod +x node_modules/sury-ppx/ppx-linux*.exe 2>/dev/
 COPY . .
 RUN bun run build
 
-# --- Stage 2: Lambda Web Adapter ---
-FROM public.ecr.aws/awsguru/aws-lambda-web-adapter:0.9.1 AS adapter
-
-# --- Stage 3: Runtime ---
+# --- Stage 2: Runtime ---
 FROM oven/bun:1-slim
-
-COPY --from=adapter /lambda-adapter /opt/extensions/lambda-adapter
 
 WORKDIR /app
 
