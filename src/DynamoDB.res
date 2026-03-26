@@ -4,8 +4,15 @@
 // --- Low-level DynamoDB client ---
 
 type dynamoDBClient
+
+type clientConfig = {
+  region?: string,
+  endpoint?: string,
+  credentials?: {accessKeyId: string, secretAccessKey: string},
+}
+
 @module("@aws-sdk/client-dynamodb") @new
-external createClient: unit => dynamoDBClient = "DynamoDBClient"
+external createClient: clientConfig => dynamoDBClient = "DynamoDBClient"
 
 // --- Document client (auto-marshals JS objects) ---
 
@@ -17,8 +24,20 @@ type translateConfig = {marshallOptions: {removeUndefinedValues: bool}}
 external createDocumentClient: (dynamoDBClient, translateConfig) => documentClient =
   "DynamoDBDocumentClient"
 
-let make = () =>
-  createDocumentClient(createClient(), {marshallOptions: {removeUndefinedValues: true}})
+let make = (~config: clientConfig={}) => {
+  let config = switch Bun.env->Bun.Env.get("DYNAMODB_ENDPOINT") {
+  | Some(endpoint) => {
+      endpoint,
+      region: config.region->Option.getOr("us-east-1"),
+      credentials: config.credentials->Option.getOr({
+        accessKeyId: "local",
+        secretAccessKey: "local",
+      }),
+    }
+  | None => config
+  }
+  createDocumentClient(createClient(config), {marshallOptions: {removeUndefinedValues: true}})
+}
 
 // --- Commands ---
 
@@ -43,3 +62,16 @@ external send: (documentClient, command) => promise<{..}> = "send"
 
 @send
 external query: (documentClient, command) => promise<queryResponse> = "send"
+
+// --- Low-level commands (for table management) ---
+
+type rawCommand
+
+@module("@aws-sdk/client-dynamodb") @new
+external createTableCommand: {..} => rawCommand = "CreateTableCommand"
+
+@module("@aws-sdk/client-dynamodb") @new
+external deleteTableCommand: {..} => rawCommand = "DeleteTableCommand"
+
+@send
+external rawSend: (dynamoDBClient, rawCommand) => promise<{..}> = "send"
