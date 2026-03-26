@@ -10,7 +10,11 @@
     {
       "Sid": "EcrAuth",
       "Effect": "Allow",
-      "Action": "ecr:GetAuthorizationToken",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr-public:GetAuthorizationToken",
+        "sts:GetServiceBearerToken"
+      ],
       "Resource": "*"
     },
     {

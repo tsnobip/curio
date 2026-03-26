@@ -23,6 +23,11 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Login to ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
       - name: Login to ECR
         id: ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -32,7 +37,10 @@ jobs:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $REGISTRY/curio:$IMAGE_TAG -t $REGISTRY/curio:latest .
+          echo 'FROM curio-base
+          COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.0.0-rc1 /lambda-adapter /opt/extensions/lambda-adapter' > Dockerfile.lambda
+          docker build -t curio-base .
+          docker build -f Dockerfile.lambda -t $REGISTRY/curio:$IMAGE_TAG -t $REGISTRY/curio:latest .
           docker push $REGISTRY/curio:$IMAGE_TAG
           docker push $REGISTRY/curio:latest
 
