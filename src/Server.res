@@ -162,18 +162,18 @@ handler.hxPostDefine(wishlistEndpoint, ~securityPolicy=SecurityPolicy.allow, ~ha
   let posterPath = formData->FormDataHelpers.getString("posterPath")->Option.getOr("")
   let action = formData->FormDataHelpers.getString("action")->Option.getOr("add")
 
-  let inWishlist = switch context.session {
+  let inWatchlist = switch context.session {
   | Some(session) =>
     try {
       let agent = await OAuth.restoreAgent(session.did)
       if action == "remove" {
-        await AtProto.Wishlist.delete(agent, session.did, AtProto.Rkey.make(~mediaType, ~tmdbId))
+        await AtProto.Watchlist.delete(agent, session.did, AtProto.Rkey.make(~mediaType, ~tmdbId))
         false
       } else {
-        await AtProto.Wishlist.put(
+        await AtProto.Watchlist.put(
           agent,
           session.did,
-          {AtProto.WishlistCollection.tmdbId, mediaType, title, posterPath},
+          {AtProto.WatchlistCollection.tmdbId, mediaType, title, posterPath},
         )
         true
       }
@@ -185,7 +185,7 @@ handler.hxPostDefine(wishlistEndpoint, ~securityPolicy=SecurityPolicy.allow, ~ha
   | None => false
   }
 
-  <WishlistButton tmdbId mediaType title posterPath inWishlist wishlistEndpoint />
+  <WatchlistButton tmdbId mediaType title posterPath inWatchlist wishlistEndpoint />
 })
 
 let favoriteEndpoint = handler.hxPostRef("favorite")
@@ -372,7 +372,7 @@ let _server = Bun.serve({
                 | list{userHandle, "ratings"} if userHandle->String.startsWith("@") =>
                   <RatingsPage session={context.session} handle={userHandle->Handle.fromString} />
                 | list{userHandle, "wishlist"} if userHandle->String.startsWith("@") =>
-                  <WishlistPage session={context.session} handle={userHandle->Handle.fromString} />
+                  <WatchlistPage session={context.session} handle={userHandle->Handle.fromString} />
                 | _ =>
                   <div className="flex justify-center py-20">
                     <h1 className="text-2xl text-gray-500"> {Hjsx.string("Page not found")} </h1>

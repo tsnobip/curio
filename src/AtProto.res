@@ -209,10 +209,10 @@ module RatingCollection = {
 
 module Rating = MakeOperations(RatingCollection)
 
-module WishlistCollection = {
+module WatchlistCollection = {
   @schema
-  type kind = | @as("social.curio.wishlistItem") Wishlist
-  let kind = Wishlist
+  type kind = | @as("social.curio.wishlistItem") Watchlist
+  let kind = Watchlist
 
   @schema
   type t = {
@@ -221,13 +221,13 @@ module WishlistCollection = {
     title: string,
     posterPath: string,
     addedAt?: @s.defaultWith(() => Date.make()) IsoDate.t,
-    \"$type"?: @s.default(Wishlist) kind,
+    \"$type"?: @s.default(Watchlist) kind,
   }
 
   let makeRkey = ({mediaType, tmdbId}) => Rkey.make(~mediaType, ~tmdbId)
 }
 
-module Wishlist = MakeOperations(WishlistCollection)
+module Watchlist = MakeOperations(WatchlistCollection)
 
 module FavoriteCollection = {
   @schema

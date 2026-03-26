@@ -4,7 +4,7 @@ let make = (
   ~mediaType: string,
   ~title: string,
   ~posterPath: string,
-  ~inWishlist: bool,
+  ~inWatchlist: bool,
   ~wishlistEndpoint: Handlers.hxPost,
 ) => {
   <form className="wishlist-btn" id={"wishlist-" ++ Int.toString(tmdbId) ++ "-" ++ mediaType}>
@@ -15,7 +15,7 @@ let make = (
     <input
       type_="hidden"
       name="action"
-      value={if inWishlist {
+      value={if inWatchlist {
         "remove"
       } else {
         "add"
@@ -26,16 +26,16 @@ let make = (
       hxPost={wishlistEndpoint}
       hxTarget={Htmx.Target.make(Closest({cssSelector: ".wishlist-btn"}))}
       hxSwap={Htmx.Swap.make(OuterHTML)}
-      title={if inWishlist {
+      title={if inWatchlist {
         "Remove from watchlist"
       } else {
         "Add to watchlist"
       }}
-      className={`transition-colors ${inWishlist
+      className={`transition-colors ${inWatchlist
           ? "text-curio-400"
           : "text-gray-600 hover:text-curio-400"}`}
     >
-      {inWishlist ? <Icons.BookmarkCheckFilled /> : <Icons.BookmarkPlusOutline />}
+      {inWatchlist ? <Icons.BookmarkCheckFilled /> : <Icons.BookmarkPlusOutline />}
     </button>
   </form>
 }

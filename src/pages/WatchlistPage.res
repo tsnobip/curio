@@ -4,16 +4,16 @@ let make = async (~handle, ~session: option<Session.t>) => {
   | Some(s) if s.handle == handle => await OAuth.restoreAgent(s.did)
   | _ => AtProto.makeAgent({service: AtProto.Service.bluesky})
   }
-  let resp = await AtProto.Wishlist.list(agent, handle)
+  let resp = await AtProto.Watchlist.list(agent, handle)
   let items = resp.data.records
 
   <div className="max-w-6xl mx-auto px-4 py-8">
     <h1 className="text-2xl font-bold text-gray-100 mb-6">
-      {Hjsx.string(`${handle->Handle.toString}'s Wishlist`)}
+      {Hjsx.string(`${handle->Handle.toString}'s Watchlist`)}
     </h1>
     {if Array.length(items) == 0 {
       <div className="flex justify-center py-12">
-        <div className="text-gray-500"> {Hjsx.string("Wishlist is empty")} </div>
+        <div className="text-gray-500"> {Hjsx.string("Watchlist is empty")} </div>
       </div>
     } else {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

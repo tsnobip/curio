@@ -42,11 +42,11 @@ let make = async (
   | None => (0, None)
   }
 
-  let inWishlist = switch session {
+  let inWatchlist = switch session {
   | Some(s) =>
     try {
       let agent = await OAuth.restoreAgent(s.did)
-      let resp = await AtProto.Wishlist.list(agent, s.did)
+      let resp = await AtProto.Watchlist.list(agent, s.did)
       let items = resp.data.records
       items->Array.some(w => w.value.tmdbId == idNum && w.value.mediaType == mediaType)
     } catch {
@@ -87,7 +87,7 @@ let make = async (
           <img
             src={Tmdb.imageUrl(path)}
             alt={m.title}
-            className="w-64 rounded-lg shadow-lg ring-1 ring-gray-800 shrink-0"
+            className="w-full max-w-96 sm:max-w-64 rounded-lg shadow-lg ring-1 ring-gray-800 shrink-0"
           />
         | None =>
           <div
@@ -142,12 +142,12 @@ let make = async (
                   isFavorite
                   favoriteEndpoint
                 />
-                <WishlistButton
+                <WatchlistButton
                   tmdbId={m.id}
                   mediaType="movie"
                   title={m.title}
                   posterPath=pp
-                  inWishlist
+                  inWatchlist
                   wishlistEndpoint
                 />
               </div>
@@ -228,12 +228,12 @@ let make = async (
                   isFavorite
                   favoriteEndpoint
                 />
-                <WishlistButton
+                <WatchlistButton
                   tmdbId={t.id}
                   mediaType="tv"
                   title={t.name}
                   posterPath=pp
-                  inWishlist
+                  inWatchlist
                   wishlistEndpoint
                 />
               </div>
