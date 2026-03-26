@@ -1,0 +1,38 @@
+{
+  "name": "curio",
+  "sources": [
+    {
+      "dir": "src",
+      "subdirs": true
+    },
+    {
+      "dir": "tests",
+      "subdirs": true,
+      "type": "dev"
+    }
+  ],
+  "package-specs": [
+    {
+      "module": "esmodule",
+      "in-source": true
+    }
+  ],
+  "suffix": ".res.mjs",
+  "jsx": {
+    "version": 4,
+    "module": "Hjsx"
+  },
+  "dependencies": [
+    "rescript-bun",
+    "rescript-x",
+    "sury"
+  ],
+  "ppx-flags": [
+    "sury-ppx/bin"
+  ],
+  "compiler-flags": [
+    "-open ResX",
+    "-open RescriptBun",
+    "-open RescriptBun.Globals"
+  ]
+}

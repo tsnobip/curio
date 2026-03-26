@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local
+        ports:
+          - 8123:8000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --trust && chmod +x node_modules/sury-ppx/ppx-linux*.exe 2>/dev/null; true
+
+      - name: Build
+        run: bun run build
+
+      - name: Test
+        run: bun test tests/
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8123
+          REVIEW_TABLE: curio-reviews-test
+          OAUTH_TABLE: curio-oauth-test
+          NODE_ENV: production
+          TESTING: "true"
