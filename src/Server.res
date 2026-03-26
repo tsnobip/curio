@@ -404,6 +404,17 @@ let _server = Bun.serve({
                 | list{} =>
                   let recentReviews = ReviewStore.getRecent(~limit=20)
                   <div className="max-w-6xl mx-auto px-4 py-8">
+                    <div className="text-center py-12 mb-4">
+                      <h1 className="text-4xl sm:text-5xl mb-3">
+                        <span className="text-gray-100 font-bold"> {Hjsx.string("Welcome to ")} </span>
+                        <span className="font-[Bungee_Shade] text-curio-400">
+                          {Hjsx.string("Curio")}
+                        </span>
+                      </h1>
+                      <p className="text-gray-500 text-lg max-w-lg mx-auto">
+                        {Hjsx.string("Rate your favorite movies and TV shows, write reviews, and share them on the ATmosphere.")}
+                      </p>
+                    </div>
                     {if Array.length(recentReviews) > 0 {
                       <div>
                         <h2 className="text-lg font-semibold text-gray-100 mb-4">
