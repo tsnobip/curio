@@ -140,7 +140,7 @@ let make = async (
   | None => false
   }
 
-  let communityReviews = ReviewStore.getForMedia(
+  let communityReviews = await ReviewStore.getForMedia(
     ~mediaKey=ReviewStore.mediaKey(~mediaType, ~tmdbId=idNum),
     ~excludeDid=?session->Option.map(s => s.did),
   )

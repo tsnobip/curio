@@ -144,7 +144,7 @@ handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handle
 
       // Cache in ReviewStore
       if rating > 0 {
-        ReviewStore.put({
+        await ReviewStore.put({
           mediaKey: ReviewStore.mediaKey(~mediaType, ~tmdbId),
           did: session.did,
           rating,
@@ -158,7 +158,7 @@ handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handle
           createdAt: Spacetime.now(),
         })
       } else {
-        ReviewStore.delete(~mediaKey=ReviewStore.mediaKey(~mediaType, ~tmdbId), ~did=session.did)
+        await ReviewStore.delete(~mediaKey=ReviewStore.mediaKey(~mediaType, ~tmdbId), ~did=session.did)
       }
     } catch {
     | JsExn(e) => Console.error2("Error rating", e)
@@ -402,7 +402,7 @@ let _server = Bun.serve({
               <main>
                 {switch path {
                 | list{} =>
-                  let recentReviews = ReviewStore.getRecent(~limit=20)
+                  let recentReviews = await ReviewStore.getRecent(~limit=20)
                   <div className="max-w-6xl mx-auto px-4 py-8">
                     <div className="text-center py-12 mb-4">
                       <h1 className="text-4xl sm:text-5xl mb-3">

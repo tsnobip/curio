@@ -81,7 +81,7 @@ let make = async (~handle: Handle.t, ~session: option<Session.t>) => {
   }
 
   // Latest ratings (try local store first, fallback to ATProto)
-  let localReviews = ReviewStore.getForUser(~did=handle, ~limit=3)
+  let localReviews = await ReviewStore.getForUser(~did=handle, ~limit=3)
   let ratings = if Array.length(localReviews) > 0 {
     localReviews->Array.map(r => {
       let rating: AtProto.RatingCollection.t = {

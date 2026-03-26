@@ -4,21 +4,17 @@ type oauthClient
 type oauthSession
 
 type clientMetadata = {
-  client_id: string,
-  redirect_uris: array<string>,
+  @as("client_id") clientId: string,
+  @as("redirect_uris") redirectUris: array<string>,
   scope: string,
-  grant_types: array<string>,
-  response_types: array<string>,
-  application_type: string,
-  token_endpoint_auth_method: string,
-  dpop_bound_access_tokens: bool,
+  @as("grant_types") grantTypes: array<string>,
+  @as("response_types") responseTypes: array<string>,
+  @as("application_type") applicationType: string,
+  @as("token_endpoint_auth_method") tokenEndpointAuthMethod: string,
+  @as("dpop_bound_access_tokens") dpopBoundAccessTokens: bool,
 }
 
-type store = {
-  set: (string, JSON.t) => promise<unit>,
-  get: string => promise<option<JSON.t>>,
-  del: string => promise<unit>,
-}
+type store = OAuthStoreTypes.store
 
 type clientOptions = {
   clientMetadata: clientMetadata,
@@ -53,66 +49,15 @@ type sessionInfo = {handle: option<Handle.t>}
 @module("@atproto/api") @new
 external agentFromSession: oauthSession => AtProto.agent = "Agent"
 
-// --- SQLite Store ---
+// --- Store (SQLite in dev, DynamoDB in production) ---
 
-let db = BunSqlite.Database.make("data/oauth.db")
-
-db
-->BunSqlite.Database.query(
-  "CREATE TABLE IF NOT EXISTS oauth_state (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
-)
-->BunSqlite.Statement.run({"_": 0})
-->ignore
-
-db
-->BunSqlite.Database.query(
-  "CREATE TABLE IF NOT EXISTS oauth_session (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
-)
-->BunSqlite.Statement.run({"_": 0})
-->ignore
-
-let safeStringify = (val: 'a): string => {
-  switch JSON.stringifyAny(val) {
-  | Some(s) => s
-  | None => "null"
-  }
+let storeImpl = if Bun.env.node_env === Some("production") {
+  module(OAuthStoreDynamo: OAuthStoreTypes.Impl)
+} else {
+  module(OAuthStoreSqlite: OAuthStoreTypes.Impl)
 }
 
-// Bun SQLite named params are broken in 1.3 — use positional params
-module Stmt = {
-  type sqliteRow = {value: string}
-
-  type param = string
-  @send @variadic
-  external run: (BunSqlite.Statement.t, array<param>) => unit = "run"
-
-  @send
-  external get: (BunSqlite.Statement.t, array<param>) => Nullable.t<sqliteRow> = "get"
-}
-
-let makeSqliteStore = (table: string): store => {
-  set: async (key, val) => {
-    let serialized = safeStringify(val)
-    db
-    ->BunSqlite.Database.query(`INSERT OR REPLACE INTO ${table} (key, value) VALUES (?, ?)`)
-    ->Stmt.run([key, serialized])
-  },
-  get: async key => {
-    let result =
-      db
-      ->BunSqlite.Database.query(`SELECT value FROM ${table} WHERE key = ?`)
-      ->Stmt.get([key])
-    switch result {
-    | Value(row) => Some(JSON.parseOrThrow(row.value))
-    | Undefined | Null => None
-    }
-  },
-  del: async key => {
-    db
-    ->BunSqlite.Database.query(`DELETE FROM ${table} WHERE key = ?`)
-    ->Stmt.run([key])
-  },
-}
+module StoreImpl = unpack(storeImpl)
 
 // --- State ---
 
@@ -143,17 +88,17 @@ let initOAuthClient = (publicUrl: string) => {
 
   let c = makeClient({
     clientMetadata: {
-      client_id: clientId,
-      redirect_uris: [redirectUri],
+      clientId,
+      redirectUris: [redirectUri],
       scope,
-      grant_types: ["authorization_code", "refresh_token"],
-      response_types: ["code"],
-      application_type: "native",
-      token_endpoint_auth_method: "none",
-      dpop_bound_access_tokens: true,
+      grantTypes: ["authorization_code", "refresh_token"],
+      responseTypes: ["code"],
+      applicationType: "native",
+      tokenEndpointAuthMethod: "none",
+      dpopBoundAccessTokens: true,
     },
-    stateStore: makeSqliteStore("oauth_state"),
-    sessionStore: makeSqliteStore("oauth_session"),
+    stateStore: StoreImpl.stateStore,
+    sessionStore: StoreImpl.sessionStore,
   })
   client := Some(c)
 }
