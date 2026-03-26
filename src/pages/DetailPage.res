@@ -110,13 +110,13 @@ let make = async (
             <span>
               {Hjsx.string(
                 switch m.runtime {
-                | Some(r) => Int.toString(r) ++ " min"
+                | Some(r) => `${Int.toString(r)} min`
                 | None => ""
                 },
               )}
             </span>
             <span className="text-gold-400">
-              {Hjsx.string("★ " ++ Float.toFixed(m.voteAverage, ~digits=1))}
+              {Hjsx.string(`★ ${Float.toFixed(m.voteAverage, ~digits=1)}`)}
             </span>
           </div>
           <div className="text-sm text-gray-500 mb-4">
@@ -197,13 +197,13 @@ let make = async (
             <span>
               {Hjsx.string(
                 switch t.numberOfSeasons {
-                | Some(n) => Int.toString(n) ++ (n == 1 ? " season" : " seasons")
+                | Some(n) => `${Int.toString(n)} ${n == 1 ? "season" : "seasons"}`
                 | None => ""
                 },
               )}
             </span>
             <span className="text-gold-400">
-              {Hjsx.string("★ " ++ Float.toFixed(t.voteAverage, ~digits=1))}
+              {Hjsx.string(`★ ${Float.toFixed(t.voteAverage, ~digits=1)}`)}
             </span>
           </div>
           <div className="text-sm text-gray-500 mb-4">

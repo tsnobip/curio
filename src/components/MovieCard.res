@@ -2,7 +2,7 @@
 let make = (~result: Tmdb.searchResult) => {
   let title = Tmdb.displayTitle(result)
   let year = Tmdb.displayYear(result)
-  let route = "/" ++ result.mediaType ++ "/" ++ Int.toString(result.id)
+  let route = `/${result.mediaType}/${Int.toString(result.id)}`
 
   let posterContent = switch result.posterPath {
   | Some(path) =>
@@ -30,7 +30,7 @@ let make = (~result: Tmdb.searchResult) => {
       <span className="text-xs text-gray-500"> {Hjsx.string(year)} </span>
       <span className="text-xs text-gold-400">
         {switch result.voteAverage {
-        | Some(rating) => Hjsx.string("★ " ++ Float.toFixed(rating, ~digits=1))
+        | Some(rating) => Hjsx.string(`★ ${Float.toFixed(rating, ~digits=1)}`)
         | None => Hjsx.string("No rating yet")
         }}
       </span>

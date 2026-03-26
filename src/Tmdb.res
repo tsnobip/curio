@@ -1,6 +1,6 @@
 let baseUrl = "https://api.themoviedb.org/3"
 
-let imageUrl = posterPath => "https://image.tmdb.org/t/p/w500" ++ posterPath
+let imageUrl = posterPath => `https://image.tmdb.org/t/p/w500${posterPath}`
 
 @schema
 type searchResult = {
@@ -68,20 +68,20 @@ let fetchJson = async (apiKey, url) => {
 }
 
 let searchMulti = async (apiKey, query) => {
-  let url = baseUrl ++ "/search/multi?query=" ++ encodeURIComponent(query) ++ "&include_adult=false"
+  let url = `${baseUrl}/search/multi?query=${encodeURIComponent(query)}&include_adult=false`
   let json = await fetchJson(apiKey, url)
   let response = json->S.parseOrThrow(searchResponseSchema)
   response.results->Array.filter(r => r.mediaType == "movie" || r.mediaType == "tv")
 }
 
 let fetchMovie = async (apiKey, id) => {
-  let url = baseUrl ++ "/movie/" ++ Int.toString(id)
+  let url = `${baseUrl}/movie/${Int.toString(id)}`
   let json = await fetchJson(apiKey, url)
   Movie(json->S.parseOrThrow(movieDetailSchema))
 }
 
 let fetchTv = async (apiKey, id) => {
-  let url = baseUrl ++ "/tv/" ++ Int.toString(id)
+  let url = `${baseUrl}/tv/${Int.toString(id)}`
   let json = await fetchJson(apiKey, url)
   Tv(json->S.parseOrThrow(tvDetailSchema))
 }

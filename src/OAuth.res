@@ -132,7 +132,7 @@ external getProfileFull: (AtProto.agent, getProfileInput) => promise<profileResp
   "getProfile"
 
 let initOAuthClient = (publicUrl: string) => {
-  let redirectUri = publicUrl ++ "/oauth/callback"
+  let redirectUri = `${publicUrl}/oauth/callback`
   let scope = "atproto transition:generic"
   let clientId =
     "http://localhost?redirect_uri=" ++

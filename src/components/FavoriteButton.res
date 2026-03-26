@@ -7,7 +7,7 @@ let make = (
   ~isFavorite: bool,
   ~favoriteEndpoint: Handlers.hxPost,
 ) => {
-  <form className="favorite-btn" id={"favorite-" ++ Int.toString(tmdbId) ++ "-" ++ mediaType}>
+  <form className="favorite-btn" id={`favorite-${Int.toString(tmdbId)}-${mediaType}`}>
     <input type_="hidden" name="tmdbId" value={Int.toString(tmdbId)} />
     <input type_="hidden" name="mediaType" value={mediaType} />
     <input type_="hidden" name="title" value={title} />
@@ -30,7 +30,7 @@ let make = (
         "text-gray-600 hover:text-heart"
       }}
     >
-      {Hjsx.string(if isFavorite { "\u2665" } else { "\u2661" })}
+      {Hjsx.string(if isFavorite { "♥" } else { "♡" })}
     </button>
   </form>
 }

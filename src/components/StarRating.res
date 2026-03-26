@@ -1,3 +1,5 @@
+let maxRating = 10
+
 @jsx.component
 let make = (
   ~tmdbId: int,
@@ -8,10 +10,10 @@ let make = (
   ~currentReview: option<string>,
   ~rateEndpoint: Handlers.hxPost,
 ) => {
-  // Stars rendered in reverse DOM order (5->1), displayed with flex-direction: row-reverse
-  // so they appear visually as 1->5. This lets CSS ~ selector highlight "previous" stars on hover.
-  let stars = Array.fromInitializer(~length=5, i => {
-    let star = 5 - i
+  // Stars in reverse DOM order, displayed with flex-direction: row-reverse.
+  // CSS ~ selector highlights "previous" stars on hover.
+  let stars = Array.fromInitializer(~length=maxRating, i => {
+    let star = maxRating - i
     let filled = star <= currentRating
 
     <form className="star-form">
@@ -23,24 +25,40 @@ let make = (
       <input
         type_="hidden"
         name="rating"
-        value={if star == currentRating { "0" } else { Int.toString(star) }}
+        value={if star == currentRating {
+          "0"
+        } else {
+          Int.toString(star)
+        }}
       />
       <button
         type_="submit"
         hxPost={rateEndpoint}
         hxTarget={Htmx.Target.make(Closest({cssSelector: ".star-rating"}))}
         hxSwap={Htmx.Swap.make(OuterHTML)}
-        className={"star-btn text-2xl transition-colors cursor-pointer " ++
-        if filled {
-          "text-gold-400"
-        } else {
-          "text-gray-600"
-        }}
+        __rawProps={dict{"data-star": Int.toString(star)->JSON.Encode.string}}
+        className={`relative text-lg transition-colors cursor-pointer 
+        group-hover/stars:text-gray-600 [.star-form:hover_&]:text-gold-400
+         [.star-form:hover~.star-form_&]:text-gold-400 after:content-[attr(data-star)]
+          after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:px-2 
+          after:py-1 after:rounded after:text-xs after:leading-tight after:whitespace-nowrap
+           after:bg-gray-800 after:text-gray-300 after:opacity-0 after:pointer-events-none 
+           after:transition-opacity hover:after:opacity-100 ${filled
+            ? "text-gold-400"
+            : "text-gray-600"}`}
       >
-        {Hjsx.string(if filled { "\u2605" } else { "\u2606" })}
+        {Hjsx.string(filled ? "★" : "☆")}
       </button>
     </form>
   })
+
+  let ratingLabel = if currentRating > 0 {
+    <span className="text-sm text-gray-400 ml-1.5">
+      {Hjsx.string(`${Int.toString(currentRating)}/${Int.toString(maxRating)}`)}
+    </span>
+  } else {
+    Hjsx.null
+  }
 
   let reviewSection = if currentRating > 0 {
     <form className="mt-3">
@@ -70,9 +88,7 @@ let make = (
       </div>
       {switch currentReview {
       | Some(r) if r != "" =>
-        <p className="mt-2 text-sm text-gray-400 italic">
-          {Hjsx.string(r)}
-        </p>
+        <p className="mt-2 text-sm text-gray-400 italic"> {Hjsx.string(r)} </p>
       | _ => Hjsx.null
       }}
     </form>
@@ -81,11 +97,11 @@ let make = (
   }
 
   <div
-    className="star-rating"
-    id={"rating-" ++ Int.toString(tmdbId) ++ "-" ++ mediaType}
+    className="star-rating group/stars" id={`rating-${Int.toString(tmdbId)}-${mediaType}`}
   >
-    <div className="flex flex-row-reverse justify-end gap-0.5">
+    <div className="flex flex-row-reverse justify-end items-center">
       {stars->Hjsx.array}
+      {ratingLabel}
     </div>
     {reviewSection}
   </div>

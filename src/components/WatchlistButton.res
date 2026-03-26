@@ -7,7 +7,7 @@ let make = (
   ~inWatchlist: bool,
   ~wishlistEndpoint: Handlers.hxPost,
 ) => {
-  <form className="wishlist-btn" id={"wishlist-" ++ Int.toString(tmdbId) ++ "-" ++ mediaType}>
+  <form className="wishlist-btn" id={`wishlist-${Int.toString(tmdbId)}-${mediaType}`}>
     <input type_="hidden" name="tmdbId" value={Int.toString(tmdbId)} />
     <input type_="hidden" name="mediaType" value={mediaType} />
     <input type_="hidden" name="title" value={title} />

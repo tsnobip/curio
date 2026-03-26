@@ -54,7 +54,7 @@ let setSessionCookie = (headers, session: Session.t) => {
   let encoded = toBase64(session->S.reverseConvertToJsonOrThrow(Session.schema)->JSON.stringify)
   headers->Headers.set(
     "Set-Cookie",
-    "curio_session=" ++ encoded ++ "; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400",
+    `curio_session=${encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`,
   )
 }
 
@@ -276,7 +276,7 @@ let publicUrl = switch Bun.env->Bun.Env.get("PUBLIC_URL") {
   if BunUtils.isDev {
     "http://127.0.0.1:5173"
   } else {
-    "http://127.0.0.1:" ++ Int.toString(port)
+    `http://127.0.0.1:${Int.toString(port)}`
   }
 }
 OAuth.initOAuthClient(publicUrl)
@@ -303,7 +303,7 @@ let _server = Bun.serve({
       | JsExn(e) =>
         Console.error2("OAuth callback error", e)
         Response.makeRedirect(
-          "/login?error=" ++ encodeURIComponent("Login failed. Please try again."),
+          `/login?error=${encodeURIComponent("Login failed. Please try again.")}`,
           ~status=303,
         )
       }
@@ -392,4 +392,4 @@ if BunUtils.isDev {
   BunUtils.runDevServer(~port)
 }
 
-Console.log("Curio server running on http://localhost:" ++ Int.toString(port))
+Console.log(`Curio server running on http://localhost:${Int.toString(port)}`)

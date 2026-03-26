@@ -20,7 +20,7 @@ let make = async (~handle, ~session: option<Session.t>) => {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {ratings
         ->Array.map(({value: item}) => {
-          let route = "/" ++ item.mediaType ++ "/" ++ Int.toString(item.tmdbId)
+          let route = `/${item.mediaType}/${Int.toString(item.tmdbId)}`
           let posterContent = if item.posterPath != "" {
             <img
               src={Tmdb.imageUrl(item.posterPath)}
@@ -35,13 +35,7 @@ let make = async (~handle, ~session: option<Session.t>) => {
             </div>
           }
 
-          let stars = Array.fromInitializer(~length=5, i =>
-            if i < item.rating {
-              "\u2605"
-            } else {
-              "\u2606"
-            }
-          )->Array.join("")
+          let ratingText = `${Int.toString(item.rating)}/10`
 
           <a href={route} className="group cursor-pointer block">
             <div
@@ -54,7 +48,9 @@ let make = async (~handle, ~session: option<Session.t>) => {
             >
               {Hjsx.string(item.title)}
             </h3>
-            <span className="text-xs text-gold-400"> {Hjsx.string(stars)} </span>
+            <span className="text-xs text-gold-400">
+              {Hjsx.string(`★ ${ratingText}`)}
+            </span>
           </a>
         })
         ->Hjsx.array}

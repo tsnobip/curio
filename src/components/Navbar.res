@@ -6,7 +6,7 @@ module Avatar = {
       <img
         src={url}
         alt={session.handle->Handle.toString}
-        className={"rounded-full object-cover " ++ size}
+        className={`rounded-full object-cover ${size}`}
       />
     | None =>
       let letter =
@@ -56,7 +56,7 @@ module Sidebar = {
           <button
             className="text-gray-400 hover:text-gray-100 cursor-pointer" onClick={closeSidebar}
           >
-            {Hjsx.string("\u2715")}
+            {Hjsx.string("✕")}
           </button>
         </div>
         <nav className="flex flex-col gap-1">
