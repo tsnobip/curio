@@ -70,7 +70,7 @@ module Sidebar = {
             href={`/${handle}/wishlist`}
             className="px-3 py-2 rounded-lg text-gray-300 hover:text-gray-100 hover:bg-gray-800 transition-colors"
           >
-            {Hjsx.string("My Wishlist")}
+            {Hjsx.string("My Watchlist")}
           </a>
         </nav>
         <div className="mt-auto">
@@ -93,7 +93,7 @@ let make = (~session: option<Session.t>, ~logoutAction: Handlers.FormAction.t) =
   <>
     <nav className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
-        <a href="/" className="text-xl font-bold text-curio-400 tracking-tight">
+        <a href="/" className="text-2xl font-[Bungee_Shade] text-curio-400">
           {Hjsx.string("Curio")}
         </a>
         {switch session {
