@@ -1,35 +1,15 @@
 @jsx.component
-let make = async (~handle: string, ~session: option<Session.t>) => {
-  let items = try {
-    let agent = switch session {
-    | Some(s) if s.handle == handle => await OAuth.restoreAgent(s.did)
-    | _ => AtProto.makeAgent({service: "https://public.api.bsky.app"})
-    }
-    let resp = await agent
-    ->AtProto.repo
-    ->AtProto.listRecords({
-      repo: handle,
-      collection: AtProto.wishlistCollection,
-      limit: 100,
-    })
-    resp.data.records->Array.filterMap(entry =>
-      try {
-        Some(entry.value->S.parseOrThrow(AtProto.wishlistRecordSchema))
-      } catch {
-      | JsExn(e) =>
-        Console.error2("Error parsing wishlist record", e)
-        None
-      }
-    )
-  } catch {
-  | JsExn(e) =>
-    Console.error2("Error loading wishlist for " ++ handle, e)
-    []
+let make = async (~handle, ~session: option<Session.t>) => {
+  let agent = switch session {
+  | Some(s) if s.handle == handle => await OAuth.restoreAgent(s.did)
+  | _ => AtProto.makeAgent({service: AtProto.Service.bluesky})
   }
+  let resp = await AtProto.Wishlist.list(agent, handle)
+  let items = resp.data.records
 
   <div className="max-w-6xl mx-auto px-4 py-8">
     <h1 className="text-2xl font-bold text-gray-100 mb-6">
-      {Hjsx.string("@" ++ handle ++ "'s Wishlist")}
+      {Hjsx.string(`${handle->Handle.toString}'s Wishlist`)}
     </h1>
     {if Array.length(items) == 0 {
       <div className="flex justify-center py-12">
@@ -38,8 +18,8 @@ let make = async (~handle: string, ~session: option<Session.t>) => {
     } else {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {items
-        ->Array.map((item: AtProto.wishlistRecord) => {
-          let route = "/" ++ item.mediaType ++ "/" ++ Int.toString(item.tmdbId)
+        ->Array.map(({value: item}) => {
+          let route = `/${item.mediaType}/${Int.toString(item.tmdbId)}`
           let posterContent = if item.posterPath != "" {
             <img
               src={Tmdb.imageUrl(item.posterPath)}

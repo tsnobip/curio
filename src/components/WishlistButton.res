@@ -26,19 +26,16 @@ let make = (
       hxPost={wishlistEndpoint}
       hxTarget={Htmx.Target.make(Closest({cssSelector: ".wishlist-btn"}))}
       hxSwap={Htmx.Swap.make(OuterHTML)}
-      className={"text-2xl transition-colors " ++ if inWishlist {
-        "text-heart"
+      title={if inWishlist {
+        "Remove from watchlist"
       } else {
-        "text-gray-600 hover:text-heart"
+        "Add to watchlist"
       }}
+      className={`transition-colors ${inWishlist
+          ? "text-curio-400"
+          : "text-gray-600 hover:text-curio-400"}`}
     >
-      {Hjsx.string(
-        if inWishlist {
-          "\u2665"
-        } else {
-          "\u2661"
-        },
-      )}
+      {inWishlist ? <Icons.BookmarkCheckFilled /> : <Icons.BookmarkPlusOutline />}
     </button>
   </form>
 }

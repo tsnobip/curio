@@ -3,13 +3,16 @@ module Avatar = {
   let make = (~session: Session.t, ~size="h-8 w-8 text-sm") => {
     switch session.avatar {
     | Some(url) =>
-      <img src={url} alt={session.handle} className={"rounded-full object-cover " ++ size} />
+      <img
+        src={url}
+        alt={session.handle->Handle.toString}
+        className={"rounded-full object-cover " ++ size}
+      />
     | None =>
       let letter =
         session.displayName
-        ->Option.getOr(session.handle)
+        ->Option.getOr(session.handle->Handle.toString)
         ->String.get(0)
-        ->Option.map(String.make)
         ->Option.getOr("?")
         ->String.toUpperCase
       <div
@@ -27,6 +30,7 @@ let closeSidebar = "document.getElementById('sidebar').removeAttribute('data-ope
 module Sidebar = {
   @jsx.component
   let make = (~session: Session.t, ~logoutAction: Handlers.FormAction.t) => {
+    let handle = session.handle->Handle.toString
     <div id="sidebar" className="group fixed inset-0 z-100 pointer-events-none">
       // Backdrop: fades in
       <div
@@ -46,7 +50,7 @@ module Sidebar = {
                 <div className="text-sm font-medium text-gray-100"> {Hjsx.string(name)} </div>
               | None => Hjsx.null
               }}
-              <div className="text-xs text-gray-400"> {Hjsx.string("@" ++ session.handle)} </div>
+              <div className="text-xs text-gray-400"> {Hjsx.string(handle)} </div>
             </div>
           </div>
           <button
@@ -57,13 +61,13 @@ module Sidebar = {
         </div>
         <nav className="flex flex-col gap-1">
           <a
-            href={"/@" ++ session.handle ++ "/ratings"}
+            href={`/${handle}/ratings`}
             className="px-3 py-2 rounded-lg text-gray-300 hover:text-gray-100 hover:bg-gray-800 transition-colors"
           >
             {Hjsx.string("My Ratings")}
           </a>
           <a
-            href={"/@" ++ session.handle ++ "/wishlist"}
+            href={`/${handle}/wishlist`}
             className="px-3 py-2 rounded-lg text-gray-300 hover:text-gray-100 hover:bg-gray-800 transition-colors"
           >
             {Hjsx.string("My Wishlist")}
@@ -97,7 +101,7 @@ let make = (~session: option<Session.t>, ~logoutAction: Handlers.FormAction.t) =
           <button
             className="cursor-pointer flex items-center"
             onClick="document.getElementById('sidebar').toggleAttribute('data-open')"
-            title={"@" ++ s.handle}
+            title={s.handle->Handle.toString}
           >
             <Avatar session=s />
           </button>

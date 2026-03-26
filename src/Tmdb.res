@@ -59,10 +59,10 @@ type mediaDetail =
   | Tv(tvDetail)
 
 let fetchJson = async (apiKey, url) => {
-  let headers = Dict.fromArray([
-    ("Authorization", "Bearer " ++ apiKey),
-    ("Content-Type", "application/json"),
-  ])
+  let headers = dict{
+    "Authorization": `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  }
   let resp = await fetch(url, ~init={headers: FromDict(headers)})
   await resp->Response.json
 }

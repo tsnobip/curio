@@ -120,29 +120,33 @@ handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handle
   let rating = formData->FormDataHelpers.getInt("rating")->Option.getOr(0)
   let title = formData->FormDataHelpers.getString("title")->Option.getOr("")
   let posterPath = formData->FormDataHelpers.getString("posterPath")->Option.getOr("")
+  let review = formData->FormDataHelpers.getString("review")
+  let review = switch review {
+  | Some("") => None
+  | other => other
+  }
 
   switch context.session {
   | Some(session) =>
     try {
       let agent = await OAuth.restoreAgent(session.did)
       if rating == 0 {
-        let _ = await AtProto.deleteRating(agent, session.did, tmdbId, mediaType)
+        await AtProto.Rating.delete(agent, session.did, AtProto.Rkey.make(~mediaType, ~tmdbId))
       } else {
-        let _ = await AtProto.putRating(
+        await AtProto.Rating.put(
           agent,
           session.did,
-          tmdbId,
-          mediaType,
-          rating,
-          title,
-          posterPath,
+          {AtProto.RatingCollection.tmdbId, mediaType, title, posterPath, rating, review},
         )
       }
     } catch {
     | JsExn(e) => Console.error2("Error rating", e)
     }
-    <StarRating tmdbId mediaType title posterPath currentRating=rating rateEndpoint />
-  | None => <StarRating tmdbId mediaType title posterPath currentRating=0 rateEndpoint />
+    <StarRating
+      tmdbId mediaType title posterPath currentRating=rating currentReview=review rateEndpoint
+    />
+  | None =>
+    <StarRating tmdbId mediaType title posterPath currentRating=0 currentReview=None rateEndpoint />
   }
 })
 
@@ -163,16 +167,13 @@ handler.hxPostDefine(wishlistEndpoint, ~securityPolicy=SecurityPolicy.allow, ~ha
     try {
       let agent = await OAuth.restoreAgent(session.did)
       if action == "remove" {
-        let _ = await AtProto.deleteWishlistItem(agent, session.did, tmdbId, mediaType)
+        await AtProto.Wishlist.delete(agent, session.did, AtProto.Rkey.make(~mediaType, ~tmdbId))
         false
       } else {
-        let _ = await AtProto.putWishlistItem(
+        await AtProto.Wishlist.put(
           agent,
           session.did,
-          tmdbId,
-          mediaType,
-          title,
-          posterPath,
+          {AtProto.WishlistCollection.tmdbId, mediaType, title, posterPath},
         )
         true
       }
@@ -185,6 +186,44 @@ handler.hxPostDefine(wishlistEndpoint, ~securityPolicy=SecurityPolicy.allow, ~ha
   }
 
   <WishlistButton tmdbId mediaType title posterPath inWishlist wishlistEndpoint />
+})
+
+let favoriteEndpoint = handler.hxPostRef("favorite")
+handler.hxPostDefine(favoriteEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handler=async ({
+  request,
+  context,
+}) => {
+  let formData = await Request.formData(request)
+  let tmdbId = formData->FormDataHelpers.getInt("tmdbId")->Option.getOr(0)
+  let mediaType = formData->FormDataHelpers.getString("mediaType")->Option.getOr("")
+  let title = formData->FormDataHelpers.getString("title")->Option.getOr("")
+  let posterPath = formData->FormDataHelpers.getString("posterPath")->Option.getOr("")
+  let action = formData->FormDataHelpers.getString("action")->Option.getOr("add")
+
+  let isFavorite = switch context.session {
+  | Some(session) =>
+    try {
+      let agent = await OAuth.restoreAgent(session.did)
+      if action == "remove" {
+        await AtProto.Favorite.delete(agent, session.did, AtProto.Rkey.make(~mediaType, ~tmdbId))
+        false
+      } else {
+        await AtProto.Favorite.put(
+          agent,
+          session.did,
+          {AtProto.FavoriteCollection.tmdbId, mediaType, title, posterPath},
+        )
+        true
+      }
+    } catch {
+    | JsExn(e) =>
+      Console.error2("Error updating favorite", e)
+      action != "remove"
+    }
+  | None => false
+  }
+
+  <FavoriteButton tmdbId mediaType title posterPath isFavorite favoriteEndpoint />
 })
 
 // --- Form Action: initiate login for custom handle ---
@@ -318,6 +357,7 @@ let _server = Bun.serve({
                     session={context.session}
                     rateEndpoint
                     wishlistEndpoint
+                    favoriteEndpoint
                   />
                 | list{"tv", id} =>
                   <DetailPage
@@ -327,15 +367,12 @@ let _server = Bun.serve({
                     session={context.session}
                     rateEndpoint
                     wishlistEndpoint
+                    favoriteEndpoint
                   />
                 | list{userHandle, "ratings"} if userHandle->String.startsWith("@") =>
-                  <RatingsPage
-                    session={context.session} handle={userHandle->String.slice(~start=1)}
-                  />
+                  <RatingsPage session={context.session} handle={userHandle->Handle.fromString} />
                 | list{userHandle, "wishlist"} if userHandle->String.startsWith("@") =>
-                  <WishlistPage
-                    session={context.session} handle={userHandle->String.slice(~start=1)}
-                  />
+                  <WishlistPage session={context.session} handle={userHandle->Handle.fromString} />
                 | _ =>
                   <div className="flex justify-center py-20">
                     <h1 className="text-2xl text-gray-500"> {Hjsx.string("Page not found")} </h1>

@@ -6,6 +6,7 @@ let make = async (
   ~session: option<Session.t>,
   ~rateEndpoint: Handlers.hxPost,
   ~wishlistEndpoint: Handlers.hxPost,
+  ~favoriteEndpoint: Handlers.hxPost,
 ) => {
   let idNum = Int.fromString(id)->Option.getOr(0)
 
@@ -21,32 +22,51 @@ let make = async (
     None
   }
 
-  let currentRating = switch session {
+  let (currentRating, currentReview) = switch session {
   | Some(s) =>
     try {
       let agent = await OAuth.restoreAgent(s.did)
-      let ratings = await AtProto.loadRatings(agent, s.did)
-      ratings
-      ->Array.find(r => r.tmdbId == idNum && r.mediaType == mediaType)
-      ->Option.map(r => r.rating)
-      ->Option.getOr(0)
+      let resp = await AtProto.Rating.list(agent, s.did)
+      let ratings = resp.data.records
+      let found =
+        ratings->Array.find(r => r.value.tmdbId == idNum && r.value.mediaType == mediaType)
+      (
+        found->Option.map(r => r.value.rating)->Option.getOr(0),
+        found->Option.flatMap(r => r.value.review),
+      )
     } catch {
     | JsExn(e) =>
       Console.error2("Error loading ratings", e)
-      0
+      (0, None)
     }
-  | None => 0
+  | None => (0, None)
   }
 
   let inWishlist = switch session {
   | Some(s) =>
     try {
       let agent = await OAuth.restoreAgent(s.did)
-      let items = await AtProto.loadWishlist(agent, s.did)
-      items->Array.some(w => w.tmdbId == idNum && w.mediaType == mediaType)
+      let resp = await AtProto.Wishlist.list(agent, s.did)
+      let items = resp.data.records
+      items->Array.some(w => w.value.tmdbId == idNum && w.value.mediaType == mediaType)
     } catch {
     | JsExn(e) =>
       Console.error2("Error loading wishlist", e)
+      false
+    }
+  | None => false
+  }
+
+  let isFavorite = switch session {
+  | Some(s) =>
+    try {
+      let agent = await OAuth.restoreAgent(s.did)
+      let resp = await AtProto.Favorite.list(agent, s.did)
+      let favs = resp.data.records
+      favs->Array.some(f => f.value.tmdbId == idNum && f.value.mediaType == mediaType)
+    } catch {
+    | JsExn(e) =>
+      Console.error2("Error loading favorites", e)
       false
     }
   | None => false
@@ -67,7 +87,7 @@ let make = async (
           <img
             src={Tmdb.imageUrl(path)}
             alt={m.title}
-            className="w-64 rounded-lg shadow-lg ring-1 ring-gray-800 flex-shrink-0"
+            className="w-64 rounded-lg shadow-lg ring-1 ring-gray-800 shrink-0"
           />
         | None =>
           <div
@@ -111,24 +131,36 @@ let make = async (
           </p>
           {switch session {
           | Some(_) =>
-            <div className="flex items-center gap-4">
+            let pp = m.posterPath->Option.getOr("")
+            <>
+              <div className="flex items-center gap-3 mb-3">
+                <FavoriteButton
+                  tmdbId={m.id}
+                  mediaType="movie"
+                  title={m.title}
+                  posterPath=pp
+                  isFavorite
+                  favoriteEndpoint
+                />
+                <WishlistButton
+                  tmdbId={m.id}
+                  mediaType="movie"
+                  title={m.title}
+                  posterPath=pp
+                  inWishlist
+                  wishlistEndpoint
+                />
+              </div>
               <StarRating
                 tmdbId={m.id}
                 mediaType="movie"
                 title={m.title}
-                posterPath={m.posterPath->Option.getOr("")}
+                posterPath=pp
                 currentRating
+                currentReview
                 rateEndpoint
               />
-              <WishlistButton
-                tmdbId={m.id}
-                mediaType="movie"
-                title={m.title}
-                posterPath={m.posterPath->Option.getOr("")}
-                inWishlist
-                wishlistEndpoint
-              />
-            </div>
+            </>
           | None => Hjsx.null
           }}
         </div>
@@ -142,7 +174,7 @@ let make = async (
           <img
             src={Tmdb.imageUrl(path)}
             alt={t.name}
-            className="w-64 rounded-lg shadow-lg ring-1 ring-gray-800 flex-shrink-0"
+            className="w-64 rounded-lg shadow-lg ring-1 ring-gray-800 shrink-0"
           />
         | None =>
           <div
@@ -185,24 +217,36 @@ let make = async (
           <p className="text-gray-300 leading-relaxed mb-6"> {Hjsx.string(t.overview)} </p>
           {switch session {
           | Some(_) =>
-            <div className="flex items-center gap-4">
+            let pp = t.posterPath->Option.getOr("")
+            <>
+              <div className="flex items-center gap-3 mb-3">
+                <FavoriteButton
+                  tmdbId={t.id}
+                  mediaType="tv"
+                  title={t.name}
+                  posterPath=pp
+                  isFavorite
+                  favoriteEndpoint
+                />
+                <WishlistButton
+                  tmdbId={t.id}
+                  mediaType="tv"
+                  title={t.name}
+                  posterPath=pp
+                  inWishlist
+                  wishlistEndpoint
+                />
+              </div>
               <StarRating
                 tmdbId={t.id}
                 mediaType="tv"
                 title={t.name}
-                posterPath={t.posterPath->Option.getOr("")}
+                posterPath=pp
                 currentRating
+                currentReview
                 rateEndpoint
               />
-              <WishlistButton
-                tmdbId={t.id}
-                mediaType="tv"
-                title={t.name}
-                posterPath={t.posterPath->Option.getOr("")}
-                inWishlist
-                wishlistEndpoint
-              />
-            </div>
+            </>
           | None => Hjsx.null
           }}
         </div>

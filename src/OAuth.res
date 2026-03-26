@@ -40,11 +40,11 @@ type callbackResult = {session: oauthSession}
 external callback: (oauthClient, URLSearchParams.t) => promise<callbackResult> = "callback"
 
 @send
-external restore: (oauthClient, string) => promise<oauthSession> = "restore"
+external restore: (oauthClient, Handle.t) => promise<oauthSession> = "restore"
 
-@get external sessionDid: oauthSession => string = "did"
+@get external sessionDid: oauthSession => Handle.t = "did"
 
-type sessionInfo = {handle: option<string>}
+type sessionInfo = {handle: option<Handle.t>}
 @get external sessionInfoOpt: oauthSession => option<sessionInfo> = "info"
 
 @send external sessionSignOut: oauthSession => promise<unit> = "signOut"
@@ -122,10 +122,10 @@ let client: ref<option<oauthClient>> = ref(None)
 type profileDataFull = {
   avatar: option<string>,
   displayName: option<string>,
-  handle: string,
+  handle: Handle.t,
 }
 type profileResponseFull = {data: profileDataFull}
-type getProfileInput = {actor: string}
+type getProfileInput = {actor: Handle.t}
 
 @send
 external getProfileFull: (AtProto.agent, getProfileInput) => promise<profileResponseFull> =
@@ -190,12 +190,12 @@ let handleCallback = async (params: URLSearchParams.t): Session.t => {
   {did, handle, avatar, displayName}
 }
 
-let restoreAgent = async (did: string) => {
+let restoreAgent = async (did: Handle.t) => {
   let session = await getClient()->restore(did)
   agentFromSession(session)
 }
 
-let signOut = async (did: string) => {
+let signOut = async did => {
   try {
     let session = await getClient()->restore(did)
     await sessionSignOut(session)
