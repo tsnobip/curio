@@ -1,16 +1,16 @@
 @jsx.component
-let make = (~loginWithHandleAction: Handlers.FormAction.t, ~error: option<string>) => {
+let make = (~loginWithHandleAction: Handlers.FormAction.t, ~error: option<LoginError.t>) => {
   <div className="max-w-sm mx-auto px-4 py-16">
     <div className="text-center mb-8">
       <h1 className="text-3xl font-bold text-curio-400 mb-2"> {Hjsx.string("Curio")} </h1>
       <p className="text-gray-400"> {Hjsx.string("Sign in to rate and save movies")} </p>
     </div>
     {switch error {
-    | Some(msg) =>
+    | Some(e) =>
       <div
         className="mb-6 px-4 py-3 rounded-lg bg-red-900/30 border border-red-800 text-red-300 text-sm"
       >
-        {Hjsx.string(msg)}
+        {Hjsx.string(LoginError.message(e))}
       </div>
     | None => Hjsx.null
     }}

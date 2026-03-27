@@ -155,7 +155,10 @@ handler.hxPostDefine(rateEndpoint, ~securityPolicy=SecurityPolicy.allow, ~handle
           createdAt: Spacetime.now(),
         })
       } else {
-        await ReviewStore.delete(~mediaKey=ReviewStore.mediaKey(~mediaType, ~tmdbId), ~did=session.did)
+        await ReviewStore.delete(
+          ~mediaKey=ReviewStore.mediaKey(~mediaType, ~tmdbId),
+          ~did=session.did,
+        )
       }
     } catch {
     | JsExn(e) => Console.error2("Error rating", e)
@@ -297,8 +300,7 @@ let loginWithHandleAction = handler.formAction(
       let headers = Headers.make()
       headers->Headers.set(
         "Location",
-        "/login?error=" ++
-        encodeURIComponent("Could not resolve handle. Check your handle and try again."),
+        `/login?error=${(LoginError.CouldNotResolveHandle :> string)}`,
       )
       Response.makeWithHeaders("", ~options={status: 303, headers})
     }
@@ -365,10 +367,7 @@ let _server = Bun.serve({
       } catch {
       | JsExn(e) =>
         Console.error2("OAuth callback error", e)
-        Response.makeRedirect(
-          `/login?error=${encodeURIComponent("Login failed. Please try again.")}`,
-          ~status=303,
-        )
+        Response.makeRedirect(`/login?error=${(LoginError.LoginFailed :> string)}`, ~status=303)
       }
 
     | _ =>
@@ -414,13 +413,17 @@ let _server = Bun.serve({
                   <div className="max-w-6xl mx-auto px-4 py-8">
                     <div className="text-center py-12 mb-4">
                       <h1 className="text-4xl sm:text-5xl mb-3">
-                        <span className="text-gray-100 font-bold"> {Hjsx.string("Welcome to ")} </span>
+                        <span className="text-gray-100 font-bold">
+                          {Hjsx.string("Welcome to ")}
+                        </span>
                         <span className="font-[Bungee_Shade] text-curio-400">
                           {Hjsx.string("Curio")}
                         </span>
                       </h1>
                       <p className="text-gray-500 text-lg max-w-lg mx-auto">
-                        {Hjsx.string("Rate your favorite movies and TV shows, write reviews, and share them on the ATmosphere.")}
+                        {Hjsx.string(
+                          "Rate your favorite movies and TV shows, write reviews, and share them on the ATmosphere.",
+                        )}
                       </p>
                     </div>
                     {if Array.length(recentReviews) > 0 {
@@ -437,13 +440,17 @@ let _server = Bun.serve({
                     } else {
                       <div className="flex justify-center py-12">
                         <div className="text-gray-500">
-                          {Hjsx.string("No reviews yet. Search for movies and TV shows to get started!")}
+                          {Hjsx.string(
+                            "No reviews yet. Search for movies and TV shows to get started!",
+                          )}
                         </div>
                       </div>
                     }}
                   </div>
                 | list{"login"} =>
-                  let error = url->URL.searchParams->URLSearchParams.get("error")
+                  let error = (url
+                  ->URL.searchParams
+                  ->URLSearchParams.get("error") :> option<LoginError.t>)
                   <LoginPage loginWithHandleAction error />
                 | list{"movie", id} =>
                   <DetailPage
