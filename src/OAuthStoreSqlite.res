@@ -68,4 +68,4 @@ let makeStore = (table: string): OAuthStoreTypes.store => {
 
 let stateStore = makeStore("oauth_state")
 let sessionStore = makeStore("oauth_session")
-let requestLock = None
+let requestLock: option<(string, unit => promise<unit>) => promise<unit>> = None

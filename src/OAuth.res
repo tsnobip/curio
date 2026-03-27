@@ -20,7 +20,6 @@ type clientOptions = {
   clientMetadata: clientMetadata,
   stateStore: store,
   sessionStore: store,
-  requestLock?: unit => promise<unit>,
 }
 
 @module("@atproto/oauth-client-node") @new
@@ -90,25 +89,37 @@ let initOAuthClient = (publicUrl: string) => {
     `${publicUrl}/client-metadata.json`
   }
 
-  let c = makeClient({
-    clientMetadata: {
-      clientId,
-      redirectUris: [redirectUri],
-      scope,
-      grantTypes: ["authorization_code", "refresh_token"],
-      responseTypes: ["code"],
-      applicationType: if isLocalhost {
-        "native"
-      } else {
-        "web"
-      },
-      tokenEndpointAuthMethod: "none",
-      dpopBoundAccessTokens: true,
+  let clientMetadata = {
+    clientId,
+    redirectUris: [redirectUri],
+    scope,
+    grantTypes: ["authorization_code", "refresh_token"],
+    responseTypes: ["code"],
+    applicationType: if isLocalhost {
+      "native"
+    } else {
+      "web"
     },
-    stateStore: StoreImpl.stateStore,
-    sessionStore: StoreImpl.sessionStore,
-    requestLock: ?StoreImpl.requestLock,
-  })
+    tokenEndpointAuthMethod: "none",
+    dpopBoundAccessTokens: true,
+  }
+  let c = switch StoreImpl.requestLock {
+  | None =>
+    makeClient({
+      clientMetadata,
+      stateStore: StoreImpl.stateStore,
+      sessionStore: StoreImpl.sessionStore,
+    })
+  | Some(lockFn) =>
+    makeClient(
+      Obj.magic(dict{
+        "clientMetadata": Obj.magic(clientMetadata),
+        "stateStore": Obj.magic(StoreImpl.stateStore),
+        "sessionStore": Obj.magic(StoreImpl.sessionStore),
+        "requestLock": Obj.magic(lockFn),
+      }),
+    )
+  }
   client := Some(c)
 }
 

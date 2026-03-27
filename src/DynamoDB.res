@@ -50,7 +50,14 @@ external putCommand: {..} => command = "PutCommand"
 external deleteCommand: {..} => command = "DeleteCommand"
 
 @module("@aws-sdk/lib-dynamodb") @new
+external getCommand: {..} => command = "GetCommand"
+
+@module("@aws-sdk/lib-dynamodb") @new
 external queryCommand: {..} => command = "QueryCommand"
+
+type getResponse = {
+  @as("Item") item: option<JSON.t>,
+}
 
 type queryResponse = {
   @as("Items") items: option<array<JSON.t>>,
@@ -62,6 +69,9 @@ external send: (documentClient, command) => promise<{..}> = "send"
 
 @send
 external query: (documentClient, command) => promise<queryResponse> = "send"
+
+@send
+external getItem: (documentClient, command) => promise<getResponse> = "send"
 
 // --- Low-level commands (for table management) ---
 

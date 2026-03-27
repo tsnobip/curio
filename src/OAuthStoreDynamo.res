@@ -8,6 +8,15 @@ let tableName = Env.oauthTable
 
 let client = DynamoDB.make()
 
+/** DocumentClient returns plain objects; `JSON.Decode` may not classify `value` as JSON.String. */
+let itemValueString: JSON.t => option<string> = %raw(`
+  function (item) {
+    if (item == null || typeof item !== "object") return
+    var v = item.value
+    return typeof v === "string" ? v : undefined
+  }
+`)
+
 let makeStore = (storeType: string): OAuthStoreTypes.store => {
   set: async (key, val) => {
     let serialized = switch JSON.stringifyAny(val) {
@@ -26,23 +35,21 @@ let makeStore = (storeType: string): OAuthStoreTypes.store => {
     )
   },
   get: async key => {
-    let resp = await client->DynamoDB.query(
-      DynamoDB.queryCommand({
+    let resp = await client->DynamoDB.getItem(
+      DynamoDB.getCommand({
         "TableName": tableName,
-        "KeyConditionExpression": "pk = :pk AND sk = :sk",
-        "ExpressionAttributeValues": {
-          ":pk": key,
-          ":sk": storeType,
+        "Key": {
+          "pk": key,
+          "sk": storeType,
         },
-        "Limit": 1,
+        "ConsistentRead": true,
       }),
     )
-    switch resp.items->Option.getOr([])->Array.get(0) {
+    switch resp.item {
     | Some(item) =>
-      let dict = item->JSON.Decode.object->Option.getOr(Dict.make())
-      switch dict->Dict.get("value") {
-      | Some(JSON.String(s)) => Some(JSON.parseOrThrow(s))
-      | _ => None
+      switch itemValueString(item) {
+      | Some(s) => Some(JSON.parseOrThrow(s))
+      | None => None
       }
     | None => None
     }
@@ -117,8 +124,21 @@ let releaseLock = async () => {
   )
 }
 
+let rethrow: exn => 'a = %raw(`function (e) { throw e }`)
+
 let requestLock = Some(
-  async () => {
-    await acquireLock()
-  },
+  Obj.magic(
+    async (_name, fn) => {
+      await acquireLock()
+      try {
+        let r = await fn()
+        await releaseLock()
+        r
+      } catch {
+      | exn =>
+        await releaseLock()
+        rethrow(exn)
+      }
+    },
+  ),
 )

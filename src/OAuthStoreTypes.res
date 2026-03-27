@@ -7,5 +7,6 @@ type store = {
 module type Impl = {
   let stateStore: store
   let sessionStore: store
-  let requestLock: option<unit => promise<unit>>
+  /** Stored widened for typing; runtime is `(name, fn) => …` for NodeOAuthClient */
+  let requestLock: option<(string, unit => promise<unit>) => promise<unit>>
 }
