@@ -340,15 +340,12 @@ let _server = Bun.serve({
     // Handle OAuth callback outside res-x handler (it returns a redirect, not HTML)
     switch pathname {
     | "/_curio/env" =>
-      let body =
-        JSON.stringifyAny({
-          "effectivePublicUrl": publicUrl,
-          "publicUrlEnvRaw": Env.publicUrlEnvRaw,
-          "forAwsLambdaCheck": Env.forAwsLambdaCheck,
-          "awsLambdaFunctionName": Bun.env->Bun.Env.get("AWS_LAMBDA_FUNCTION_NAME"),
-          "awsExecutionEnv": Bun.env->Bun.Env.get("AWS_EXECUTION_ENV"),
-          "oauthRedirectUri": `${publicUrl}/oauth/callback`,
-        })->Option.getOr("{}")
+      let body = JSON.stringifyAny({
+        "publicUrl": publicUrl,
+        "awsLambdaFunctionName": Bun.env->Bun.Env.get("AWS_LAMBDA_FUNCTION_NAME"),
+        "awsExecutionEnv": Bun.env->Bun.Env.get("AWS_EXECUTION_ENV"),
+        "oauthRedirectUri": `${publicUrl}/oauth/callback`,
+      })->Option.getOr("{}")
       let headers = Headers.make()
       headers->Headers.set("Content-Type", "application/json")
       headers->Headers.set("Cache-Control", "no-store")
