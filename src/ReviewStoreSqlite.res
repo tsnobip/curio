@@ -1,39 +1,48 @@
-// --- SQLite Setup ---
+// --- SQLite Setup (lazy: production imports this module but must not open DB at load) ---
 
-let db = BunSqlite.Database.make("data/reviews.db")
-db
-->BunSqlite.Database.query("PRAGMA journal_mode=WAL")
-->BunSqlite.Statement.run({"_": 0})
-->ignore
-db
-->BunSqlite.Database.query(`CREATE TABLE IF NOT EXISTS reviews (
-      media_key TEXT NOT NULL,
-      did TEXT NOT NULL,
-      rating INTEGER NOT NULL,
-      review TEXT,
-      title TEXT NOT NULL,
-      poster_path TEXT NOT NULL,
-      media_type TEXT NOT NULL,
-      tmdb_id INTEGER NOT NULL,
-      handle TEXT NOT NULL,
-      avatar TEXT,
-      created_at TEXT NOT NULL,
-      PRIMARY KEY (media_key, did)
-    )`)
-->BunSqlite.Statement.run({"_": 0})
-->ignore
-db
-->BunSqlite.Database.query(
-  "CREATE INDEX IF NOT EXISTS idx_reviews_recent ON reviews (created_at DESC)",
-)
-->BunSqlite.Statement.run({"_": 0})
-->ignore
-db
-->BunSqlite.Database.query(
-  "CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews (did, created_at DESC)",
-)
-->BunSqlite.Statement.run({"_": 0})
-->ignore
+@module("node:fs")
+external mkdirSync: (string, {"recursive": bool}) => unit = "mkdirSync"
+
+let dbLazy = Lazy.make(() => {
+  mkdirSync("data", {"recursive": true})
+  let db = BunSqlite.Database.make("data/reviews.db")
+  db
+  ->BunSqlite.Database.query("PRAGMA journal_mode=WAL")
+  ->BunSqlite.Statement.run({"_": 0})
+  ->ignore
+  db
+  ->BunSqlite.Database.query(`CREATE TABLE IF NOT EXISTS reviews (
+    media_key TEXT NOT NULL,
+    did TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    review TEXT,
+    title TEXT NOT NULL,
+    poster_path TEXT NOT NULL,
+    media_type TEXT NOT NULL,
+    tmdb_id INTEGER NOT NULL,
+    handle TEXT NOT NULL,
+    avatar TEXT,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (media_key, did)
+  )`)
+  ->BunSqlite.Statement.run({"_": 0})
+  ->ignore
+  db
+  ->BunSqlite.Database.query(
+    "CREATE INDEX IF NOT EXISTS idx_reviews_recent ON reviews (created_at DESC)",
+  )
+  ->BunSqlite.Statement.run({"_": 0})
+  ->ignore
+  db
+  ->BunSqlite.Database.query(
+    "CREATE INDEX IF NOT EXISTS idx_reviews_user ON reviews (did, created_at DESC)",
+  )
+  ->BunSqlite.Statement.run({"_": 0})
+  ->ignore
+  db
+})
+
+let getDb = () => dbLazy->Lazy.get
 
 // --- Positional param helpers ---
 
@@ -67,6 +76,7 @@ let rowToReview = (json: JSON.t): ReviewStoreTypes.review => {
 // --- Store Operations ---
 
 let put = (r: ReviewStoreTypes.review) => {
+  let db = getDb()
   db
   ->BunSqlite.Database.query(`INSERT OR REPLACE INTO reviews
      (media_key, did, rating, review, title, poster_path, media_type, tmdb_id, handle, avatar, created_at)
@@ -88,6 +98,7 @@ let put = (r: ReviewStoreTypes.review) => {
 }
 
 let delete = (~mediaKey, ~did: Handle.t) => {
+  let db = getDb()
   db
   ->BunSqlite.Database.query("DELETE FROM reviews WHERE media_key = ? AND did = ?")
   ->Stmt.run([mediaKey, Handle.toString(did)])
@@ -95,6 +106,7 @@ let delete = (~mediaKey, ~did: Handle.t) => {
 }
 
 let getForMedia = (~mediaKey, ~excludeDid: option<Handle.t>=?) => {
+  let db = getDb()
   let rows = switch excludeDid {
   | Some(did) =>
     db
@@ -113,6 +125,7 @@ let getForMedia = (~mediaKey, ~excludeDid: option<Handle.t>=?) => {
 }
 
 let getRecent = (~limit=20) => {
+  let db = getDb()
   db
   ->BunSqlite.Database.query("SELECT * FROM reviews ORDER BY created_at DESC LIMIT ?")
   ->Stmt.all([Int.toString(limit)])
@@ -121,6 +134,7 @@ let getRecent = (~limit=20) => {
 }
 
 let getForUser = (~did: Handle.t, ~limit=20) => {
+  let db = getDb()
   db
   ->BunSqlite.Database.query("SELECT * FROM reviews WHERE did = ? ORDER BY created_at DESC LIMIT ?")
   ->Stmt.all([Handle.toString(did), Int.toString(limit)])
