@@ -6,7 +6,7 @@ COPY package.json bun.lock ./
 RUN bun install --trust
 
 COPY . .
-RUN bun run build
+RUN NODE_ENV=production bun run build
 
 # --- Stage 2: Runtime ---
 FROM oven/bun:1-slim

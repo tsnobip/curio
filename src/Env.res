@@ -1,4 +1,3 @@
-let isProduction = Bun.env.node_env === Some("production")
 let isDev = BunUtils.isDev
 let isTesting = Bun.env->Bun.Env.get("TESTING") === Some("true")
 

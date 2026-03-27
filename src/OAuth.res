@@ -51,11 +51,10 @@ external agentFromSession: oauthSession => AtProto.agent = "Agent"
 
 // --- Store (SQLite in dev, DynamoDB in production) ---
 
-let storeImpl = if Env.isProduction {
-  module(OAuthStoreDynamo: OAuthStoreTypes.Impl)
-} else {
-  module(OAuthStoreSqlite: OAuthStoreTypes.Impl)
-}
+let storeImpl =
+  Bun.env.node_env === Some("production")
+    ? module(OAuthStoreDynamo: OAuthStoreTypes.Impl)
+    : module(OAuthStoreSqlite: OAuthStoreTypes.Impl)
 
 module StoreImpl = unpack(storeImpl)
 
@@ -98,7 +97,11 @@ let initOAuthClient = (publicUrl: string) => {
       scope,
       grantTypes: ["authorization_code", "refresh_token"],
       responseTypes: ["code"],
-      applicationType: if isLocalhost { "native" } else { "web" },
+      applicationType: if isLocalhost {
+        "native"
+      } else {
+        "web"
+      },
       tokenEndpointAuthMethod: "none",
       dpopBoundAccessTokens: true,
     },
