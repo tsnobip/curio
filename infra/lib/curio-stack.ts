@@ -98,7 +98,8 @@ export class CurioStack extends cdk.Stack {
           .secretValueFromJson("TMDB_API_KEY")
           .unsafeUnwrap(),
         PUBLIC_URL: `https://${DOMAIN_NAME}`,
-        AWS_LWA_INVOKE_MODE: "response_stream",
+        // Buffered + default LWA mode: RESPONSE_STREAM caused hyper IncompleteMessage
+        // (adapter → Bun) on some routes (e.g. OAuth). 6 MB buffered cap is enough here.
       },
     });
 
@@ -110,7 +111,7 @@ export class CurioStack extends cdk.Stack {
 
     const fnUrl = fn.addFunctionUrl({
       authType: lambda.FunctionUrlAuthType.NONE,
-      invokeMode: lambda.InvokeMode.RESPONSE_STREAM,
+      invokeMode: lambda.InvokeMode.BUFFERED,
     });
 
     // --- CloudFront Distribution ---
