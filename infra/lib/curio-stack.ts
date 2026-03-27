@@ -94,7 +94,9 @@ export class CurioStack extends cdk.Stack {
         NODE_ENV: "production",
         REVIEW_TABLE: reviewsTable.tableName,
         OAUTH_TABLE: oauthTable.tableName,
-        TMDB_API_KEY: tmdbSecret.secretValue.unsafeUnwrap(),
+        TMDB_API_KEY: tmdbSecret
+          .secretValueFromJson("TMDB_API_KEY")
+          .unsafeUnwrap(),
         PUBLIC_URL: `https://${DOMAIN_NAME}`,
         AWS_LWA_INVOKE_MODE: "response_stream",
       },
