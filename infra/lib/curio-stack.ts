@@ -12,8 +12,14 @@ import { Construct } from "constructs";
 
 const DOMAIN_NAME = "curio.social";
 
+interface CurioStackProps extends cdk.StackProps {
+  certificate: acm.ICertificate;
+  hostedZoneId: string;
+  hostedZoneName: string;
+}
+
 export class CurioStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: CurioStackProps) {
     super(scope, id, props);
 
     // --- ECR Repository (must exist before deploy — CI ensures it, see deploy workflow) ---
@@ -62,15 +68,16 @@ export class CurioStack extends cdk.Stack {
 
     // --- DNS & Certificate ---
 
-    const hostedZone = route53.HostedZone.fromLookup(this, "HostedZone", {
-      domainName: DOMAIN_NAME,
-    });
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
+      this,
+      "HostedZone",
+      {
+        hostedZoneId: props.hostedZoneId,
+        zoneName: props.hostedZoneName,
+      }
+    );
 
-    // Certificate must be in us-east-1 for CloudFront
-    const certificate = new acm.Certificate(this, "Certificate", {
-      domainName: DOMAIN_NAME,
-      validation: acm.CertificateValidation.fromDns(hostedZone),
-    });
+    const certificate = props.certificate;
 
     // --- Lambda Function ---
 
