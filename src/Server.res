@@ -47,16 +47,19 @@ let sessionFromCookie = (request: Request.t) => {
   }
 }
 
+let buildSessionCookie = (~value: string, ~maxAge: string) => {
+  let secure =
+    Env.publicUrl->String.startsWith("https:") ? "; Secure" : ""
+  `curio_session=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`
+}
+
 let setSessionCookie = (headers, session: Session.t) => {
   let encoded = toBase64(session->S.reverseConvertToJsonOrThrow(Session.schema)->JSON.stringify)
-  headers->Headers.set(
-    "Set-Cookie",
-    `curio_session=${encoded}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`,
-  )
+  headers->Headers.set("Set-Cookie", buildSessionCookie(~value=encoded, ~maxAge="86400"))
 }
 
 let clearSessionCookie = headers => {
-  headers->Headers.set("Set-Cookie", "curio_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0")
+  headers->Headers.set("Set-Cookie", buildSessionCookie(~value="", ~maxAge="0"))
 }
 
 let handler = Handlers.make(~requestToContext=async request => {
@@ -393,9 +396,7 @@ let _server = Bun.serve({
           let hasCookie = sessionFromCookie(request)->Option.isSome
           let hasSession = context.session->Option.isSome
           if hasCookie && !hasSession {
-            response
-            ->Response.headers
-            ->Headers.set("Set-Cookie", "curio_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0")
+            clearSessionCookie(response->Response.headers)
           }
           response
         },
