@@ -361,6 +361,7 @@ let _server = Bun.serve({
         "client_id": `${publicUrl}/client-metadata.json`,
         "client_name": "Curio",
         "client_uri": publicUrl,
+        "logo_uri": `${publicUrl}${ResXAssets.assets.favicon_svg}`,
         "redirect_uris": [redirectUri],
         "grant_types": ["authorization_code", "refresh_token"],
         "scope": "atproto transition:generic",
