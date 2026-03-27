@@ -3,7 +3,7 @@ FROM oven/bun:1 AS builder
 WORKDIR /app
 
 COPY package.json bun.lock ./
-RUN bun install --trust && chmod +x node_modules/sury-ppx/ppx-linux*.exe 2>/dev/null; true
+RUN bun install --trust
 
 COPY . .
 RUN bun run build
