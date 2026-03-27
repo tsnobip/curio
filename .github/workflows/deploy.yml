@@ -55,7 +55,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           npm ci
-          npx cdk deploy --require-approval never
+          npx cdk deploy --all --require-approval never
 
       - name: Update Lambda function
         env:
