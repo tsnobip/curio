@@ -327,7 +327,6 @@ let logoutAction = handler.formAction(
 
 let publicUrl = Env.publicUrl
 OAuth.initOAuthClient(publicUrl)
-Console.log("OAuth client initialized")
 
 let _server = Bun.serve({
   port,
