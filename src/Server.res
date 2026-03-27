@@ -401,7 +401,7 @@ let _server = Bun.serve({
             <head>
               <meta charSet="UTF-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              <link rel="icon" type_="image/svg+xml" href="/assets/favicon.svg" />
+              <link rel="icon" type_="image/svg+xml" href={ResXAssets.assets.favicon_svg} />
             </head>
             <body className="min-h-screen bg-gray-950 text-gray-100">
               <Navbar session={context.session} logoutAction searchEndpoint />
