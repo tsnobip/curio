@@ -48,8 +48,7 @@ let sessionFromCookie = (request: Request.t) => {
 }
 
 let buildSessionCookie = (~value: string, ~maxAge: string) => {
-  let secure =
-    Env.publicUrl->String.startsWith("https:") ? "; Secure" : ""
+  let secure = Env.publicUrl->String.startsWith("https:") ? "; Secure" : ""
   `curio_session=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`
 }
 
@@ -421,9 +420,9 @@ let _server = Bun.serve({
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
               <link rel="icon" type_="image/svg+xml" href={ResXAssets.assets.favicon_svg} />
             </head>
-            <body className="min-h-screen bg-gray-950 text-gray-100">
+            <body className="min-h-screen flex flex-col bg-gray-950 text-gray-100">
               <Navbar session={context.session} logoutAction searchEndpoint />
-              <main>
+              <main className="flex-1 w-full">
                 {switch path {
                 | list{} =>
                   let recentReviews = await ReviewStore.getRecent(~limit=20)
@@ -501,6 +500,27 @@ let _server = Bun.serve({
                   </div>
                 }}
               </main>
+              <footer className="mt-10 border-t border-gray-800/80 py-6 px-4">
+                <div className="max-w-6xl mx-auto text-center text-sm text-gray-500 space-y-2">
+                  <p> {Hjsx.string("© 2026 Paul Tsnobiladzé — thanks for visiting.")} </p>
+                  <p>
+                    {Hjsx.string(
+                      "Curio is lovingly built with ReScript. The whole thing is open source — ",
+                    )}
+                    <a
+                      href="https://github.com/tsnobip/curio/"
+                      className="text-curio-400 hover:text-curio-300 underline-offset-2 hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {Hjsx.string("have a look on GitHub")}
+                    </a>
+                    {Hjsx.string(
+                      " if you're curious — and don't hesitate to contribute!",
+                    )}
+                  </p>
+                </div>
+              </footer>
             </body>
           </html>
         },
