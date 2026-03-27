@@ -30,15 +30,6 @@
         "ecr:CompleteLayerUpload"
       ],
       "Resource": "arn:aws:ecr:*:*:repository/curio"
-    },
-    {
-      "Sid": "LambdaUpdate",
-      "Effect": "Allow",
-      "Action": [
-        "lambda:UpdateFunctionCode",
-        "lambda:GetFunction"
-      ],
-      "Resource": "arn:aws:lambda:*:*:function:curio"
     }
   ]
 }

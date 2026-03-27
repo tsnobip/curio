@@ -56,12 +56,3 @@ jobs:
         run: |
           npm ci
           npx cdk deploy --all --require-approval never
-
-      - name: Update Lambda function
-        env:
-          REGISTRY: ${{ steps.ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          aws lambda update-function-code \
-            --function-name curio \
-            --image-uri $REGISTRY/curio:$IMAGE_TAG
