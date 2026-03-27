@@ -16,13 +16,9 @@ export class CurioStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // --- ECR Repository ---
+    // --- ECR Repository (must exist before deploy — CI ensures it, see deploy workflow) ---
 
-    const repo = new ecr.Repository(this, "CurioRepo", {
-      repositoryName: "curio",
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      lifecycleRules: [{ maxImageCount: 10 }],
-    });
+    const repo = ecr.Repository.fromRepositoryName(this, "CurioRepo", "curio");
 
     // --- DynamoDB Tables ---
 
