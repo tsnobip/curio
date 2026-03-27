@@ -328,6 +328,8 @@ let logoutAction = handler.formAction(
 let publicUrl = Env.publicUrl
 OAuth.initOAuthClient(publicUrl)
 
+Console.log(`[curio] OAuth client base (PUBLIC_URL): ${publicUrl}`)
+
 let _server = Bun.serve({
   port,
   routes: ResXAssets.staticAssetRoutes,
@@ -337,6 +339,22 @@ let _server = Bun.serve({
 
     // Handle OAuth callback outside res-x handler (it returns a redirect, not HTML)
     switch pathname {
+    | "/_curio/env" =>
+      let body =
+        JSON.stringifyAny({
+          "effectivePublicUrl": publicUrl,
+          "publicUrlEnvRaw": Env.publicUrlEnvRaw,
+          "forAwsLambdaCheck": Env.forAwsLambdaCheck,
+          "awsLambdaFunctionName": Bun.env->Bun.Env.get("AWS_LAMBDA_FUNCTION_NAME"),
+          "awsExecutionEnv": Bun.env->Bun.Env.get("AWS_EXECUTION_ENV"),
+          "oauthRedirectUri": `${publicUrl}/oauth/callback`,
+        })->Option.getOr("{}")
+      let headers = Headers.make()
+      headers->Headers.set("Content-Type", "application/json")
+      headers->Headers.set("Cache-Control", "no-store")
+      Response.makeWithHeaders(body, ~options={status: 200, headers})
+
+    // Keep client metadata out of `public/` — Vite/res-x static routes would shadow this handler.
     | "/client-metadata.json" =>
       let redirectUri = `${publicUrl}/oauth/callback`
       let body = JSON.stringifyAny({
@@ -353,6 +371,7 @@ let _server = Bun.serve({
       })->Option.getOr("{}")
       let headers = Headers.make()
       headers->Headers.set("Content-Type", "application/json")
+      headers->Headers.set("Cache-Control", "no-store")
       Response.makeWithHeaders(body, ~options={status: 200, headers})
 
     | "/oauth/callback" =>
