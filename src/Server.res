@@ -2,6 +2,9 @@ let port = Env.port
 
 let tmdbApiKey = Env.tmdbApiKey
 
+let siteTagline =
+  "Rate your favorite movies and TV shows, write reviews, and share them on the ATmosphere."
+
 type appContext = {
   session: option<Session.t>,
 }
@@ -418,6 +421,19 @@ let _server = Bun.serve({
             <head>
               <meta charSet="UTF-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <meta name="description" content=siteTagline />
+              <meta property="og:title" content="Curio" />
+              <meta property="og:description" content=siteTagline />
+              <meta property="og:type" content="website" />
+              <meta property="og:url" content={`${publicUrl}${url->URL.pathname}`} />
+              <meta property="og:site_name" content="Curio" />
+              <meta
+                property="og:image"
+                content={`${publicUrl}${ResXAssets.assets.favicon_svg}`}
+              />
+              <meta name="twitter:card" content="summary" />
+              <meta name="twitter:title" content="Curio" />
+              <meta name="twitter:description" content=siteTagline />
               <link rel="icon" type_="image/svg+xml" href={ResXAssets.assets.favicon_svg} />
             </head>
             <body className="min-h-screen flex flex-col bg-gray-950 text-gray-100">
@@ -437,9 +453,7 @@ let _server = Bun.serve({
                         </span>
                       </h1>
                       <p className="text-gray-500 text-lg max-w-lg mx-auto">
-                        {Hjsx.string(
-                          "Rate your favorite movies and TV shows, write reviews, and share them on the ATmosphere.",
-                        )}
+                        {Hjsx.string(siteTagline)}
                       </p>
                     </div>
                     {if Array.length(recentReviews) > 0 {
