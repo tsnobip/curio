@@ -2,8 +2,7 @@ let port = Env.port
 
 let tmdbApiKey = Env.tmdbApiKey
 
-let siteTagline =
-  "Rate your favorite movies and TV shows, write reviews, and share them on the ATmosphere."
+let siteTagline = "Rate your favorite movies and TV shows, write reviews, and share them on the ATmosphere."
 
 type appContext = {
   session: option<Session.t>,
@@ -328,6 +327,20 @@ let logoutAction = handler.formAction(
   },
 )
 
+module FooterLink = {
+  @jsx.component
+  let make = (~href: string, ~children: Hjsx.element) => {
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-curio-400 hover:text-curio-300 underline-offset-2 hover:underline"
+    >
+      {children}
+    </a>
+  }
+}
+
 // --- Main Server ---
 
 let publicUrl = Env.publicUrl
@@ -427,10 +440,7 @@ let _server = Bun.serve({
               <meta property="og:type" content="website" />
               <meta property="og:url" content={`${publicUrl}${url->URL.pathname}`} />
               <meta property="og:site_name" content="Curio" />
-              <meta
-                property="og:image"
-                content={`${publicUrl}${ResXAssets.assets.favicon_svg}`}
-              />
+              <meta property="og:image" content={`${publicUrl}${ResXAssets.assets.favicon_svg}`} />
               <meta name="twitter:card" content="summary" />
               <meta name="twitter:title" content="Curio" />
               <meta name="twitter:description" content=siteTagline />
@@ -518,20 +528,19 @@ let _server = Bun.serve({
                 <div className="max-w-6xl mx-auto text-center text-sm text-gray-500 space-y-2">
                   <p> {Hjsx.string("© 2026 Paul Tsnobiladzé — thanks for visiting.")} </p>
                   <p>
-                    {Hjsx.string(
-                      "Curio is lovingly built with ReScript. The whole thing is open source — ",
-                    )}
-                    <a
-                      href="https://github.com/tsnobip/curio/"
-                      className="text-curio-400 hover:text-curio-300 underline-offset-2 hover:underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {Hjsx.string("have a look on GitHub")}
-                    </a>
-                    {Hjsx.string(
-                      " if you're curious — and don't hesitate to contribute!",
-                    )}
+                    {Hjsx.string("Curio is lovingly built with ")}
+                    <FooterLink href="https://rescript-lang.org/">
+                      {Hjsx.string("ReScript")}
+                    </FooterLink>
+                    {Hjsx.string(" and ")}
+                    <FooterLink href="https://github.com/zth/res-x">
+                      {Hjsx.string("res-x")}
+                    </FooterLink>
+                    {Hjsx.string(". Have a look on the source code on ")}
+                    <FooterLink href="https://github.com/tsnobip/curio/">
+                      {Hjsx.string("GitHub")}
+                    </FooterLink>
+                    {Hjsx.string(" if you're curious — and don't hesitate to contribute!")}
                   </p>
                 </div>
               </footer>
